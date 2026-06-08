@@ -900,6 +900,107 @@ nav::-webkit-scrollbar { display: none; }
    SCROLLBAR & SELECTION
    ============================================================ */
 ::selection { background: rgba(86,149,120,0.30); color: var(--cream); }
+
+/* ============================================================
+   LIGHTBOX
+   ============================================================ */
+#lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s ease;
+}
+
+#lightbox.open {
+  opacity: 1;
+  pointer-events: all;
+}
+
+#lightbox-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(8,27,27,0.92);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  cursor: zoom-out;
+}
+
+#lightbox-img-wrap {
+  position: relative;
+  z-index: 2;
+  max-width: 88vw;
+  max-height: 88vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: scale(0.92);
+  transition: transform 0.35s cubic-bezier(0.25,0.46,0.45,0.94);
+}
+
+#lightbox.open #lightbox-img-wrap {
+  transform: scale(1);
+}
+
+#lightbox-img {
+  max-width: 88vw;
+  max-height: 84vh;
+  object-fit: contain;
+  display: block;
+  border: 1px solid rgba(86,149,120,0.30);
+  box-shadow: 0 40px 120px rgba(0,0,0,0.7);
+}
+
+#lightbox-caption {
+  position: absolute;
+  bottom: -36px;
+  left: 0; right: 0;
+  text-align: center;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(238,232,178,0.45);
+}
+
+#lightbox-close {
+  position: absolute;
+  top: -44px;
+  right: 0;
+  background: none;
+  border: 1px solid rgba(86,149,120,0.35);
+  color: rgba(238,232,178,0.5);
+  width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.2s;
+  z-index: 3;
+}
+#lightbox-close:hover {
+  border-color: var(--gold);
+  color: var(--cream);
+}
+
+/* ============================================================
+   CLICKABLE IMAGE HOVER EFFECT
+   ============================================================ */
+.img-placeholder.lb-ready {
+  cursor: zoom-in;
+  transition: transform 0.30s cubic-bezier(0.25,0.46,0.45,0.94),
+              border-color 0.25s ease,
+              box-shadow 0.30s ease;
+}
+
+.img-placeholder.lb-ready:hover {
+  transform: scale(1.025) translateY(-3px);
+  border-color: var(--gold);
+  box-shadow: 0 12px 40px rgba(86,149,120,0.18);
+  z-index: 10;
+}
 </style>
 </head>
 <body>
@@ -1056,11 +1157,11 @@ nav::-webkit-scrollbar { display: none; }
         </div>
       </div>
 
-      <!-- Right: large factory image — 550x295 aspect ratio -->
+      <!-- Right: large factory image — occupies ~45% slide width -->
       <!-- IMAGE PLACEHOLDER: Factory Production Facility -->
       <!-- Replace with images/factory.jpg -->
       <div style="width:42%;display:flex;flex-direction:column;gap:0;">
-        <div class="img-placeholder" style="aspect-ratio:550/295;width:100%;">
+        <div class="img-placeholder" style="flex:1;">
           <img src="images/factory.jpg" alt="Factory Production Facility"
                onerror="this.style.display='none'"
                style="object-fit:cover;object-position:center center;">
@@ -1092,11 +1193,11 @@ nav::-webkit-scrollbar { display: none; }
           <!-- IMAGE PLACEHOLDER: Scandinavia Project -->
           <!-- Replace with images/region-scandinavia.jpg -->
           <div class="region-cell" style="padding:0;overflow:hidden;display:flex;flex-direction:column;">
-            <div style="padding:16px 20px 12px;">
+            <div style="padding:16px 20px 14px;">
               <p class="region-name">Scandinavia</p>
               <p class="region-countries">Norway · Sweden<br>Denmark · Finland</p>
             </div>
-            <div class="img-placeholder" style="flex:1;min-height:0;border:none;border-top:1px solid var(--border-dim);">
+            <div class="img-placeholder" style="height:180px;border:none;border-top:1px solid var(--border-dim);">
               <img src="images/region-scandinavia.jpg" alt="Scandinavia Project"
                    onerror="this.style.display='none'"
                    style="object-fit:cover;object-position:center center;">
@@ -1108,11 +1209,11 @@ nav::-webkit-scrollbar { display: none; }
           <!-- IMAGE PLACEHOLDER: Baltic Region Project -->
           <!-- Replace with images/region-baltic.jpg -->
           <div class="region-cell" style="padding:0;overflow:hidden;display:flex;flex-direction:column;">
-            <div style="padding:16px 20px 12px;">
+            <div style="padding:16px 20px 14px;">
               <p class="region-name">Baltic Region</p>
               <p class="region-countries">Latvia · Lithuania<br>Estonia</p>
             </div>
-            <div class="img-placeholder" style="flex:1;min-height:0;border:none;border-top:1px solid var(--border-dim);">
+            <div class="img-placeholder" style="height:180px;border:none;border-top:1px solid var(--border-dim);">
               <img src="images/region-baltic.jpg" alt="Baltic Region Project"
                    onerror="this.style.display='none'"
                    style="object-fit:cover;object-position:center center;">
@@ -1124,11 +1225,11 @@ nav::-webkit-scrollbar { display: none; }
           <!-- IMAGE PLACEHOLDER: Western Europe Project -->
           <!-- Replace with images/region-western-europe.jpg -->
           <div class="region-cell" style="padding:0;overflow:hidden;display:flex;flex-direction:column;">
-            <div style="padding:16px 20px 12px;">
+            <div style="padding:16px 20px 14px;">
               <p class="region-name">Western Europe</p>
               <p class="region-countries">UK · Netherlands<br>France · Germany</p>
             </div>
-            <div class="img-placeholder" style="flex:1;min-height:0;border:none;border-top:1px solid var(--border-dim);">
+            <div class="img-placeholder" style="height:180px;border:none;border-top:1px solid var(--border-dim);">
               <img src="images/region-western-europe.jpg" alt="Western Europe Project"
                    onerror="this.style.display='none'"
                    style="object-fit:cover;object-position:center center;">
@@ -1140,11 +1241,11 @@ nav::-webkit-scrollbar { display: none; }
           <!-- IMAGE PLACEHOLDER: International Project -->
           <!-- Replace with images/region-international.jpg -->
           <div class="region-cell" style="padding:0;overflow:hidden;display:flex;flex-direction:column;">
-            <div style="padding:16px 20px 12px;">
+            <div style="padding:16px 20px 14px;">
               <p class="region-name">Further Markets</p>
               <p class="region-countries">Italy · Switzerland<br>Korea · Canada · New Zealand</p>
             </div>
-            <div class="img-placeholder" style="flex:1;min-height:0;border:none;border-top:1px solid var(--border-dim);">
+            <div class="img-placeholder" style="height:180px;border:none;border-top:1px solid var(--border-dim);">
               <img src="images/region-international.jpg" alt="International Project"
                    onerror="this.style.display='none'"
                    style="object-fit:cover;object-position:center center;">
@@ -1438,9 +1539,9 @@ nav::-webkit-scrollbar { display: none; }
       </div>
 
       <!-- Right: image + stat -->
-      <div style="width:420px;display:flex;flex-direction:column;gap:12px;">
-        <!-- IMAGE PLACEHOLDER: VST multi-story building system — 409x523 portrait -->
-        <div class="img-placeholder" style="aspect-ratio:409/523;width:100%;">
+      <div style="width:480px;display:flex;flex-direction:column;gap:12px;">
+        <!-- IMAGE PLACEHOLDER: VST multi-story building system -->
+        <div class="img-placeholder" style="flex:1;">
           <img src="images/vst-system.jpg" alt="VST System" onerror="this.style.display='none'">
           <div class="img-icon">◻</div>
           <div class="img-path">images/vst-system.jpg</div>
@@ -2129,8 +2230,8 @@ nav::-webkit-scrollbar { display: none; }
         </div>
 
         <div style="display:grid;grid-template-columns:2fr 1fr;gap:10px;flex:1;">
-          <!-- IMAGE PLACEHOLDER: factory main floor production — 550x295 ratio -->
-          <div class="img-placeholder" style="aspect-ratio:550/295;">
+          <!-- IMAGE PLACEHOLDER: factory main floor production -->
+          <div class="img-placeholder">
             <img src="images/factory.jpg" alt="" onerror="this.style.display='none'">
             <div class="img-icon" style="font-size:36px;">◫</div>
             <div class="img-path">images/factory.jpg</div>
@@ -2146,7 +2247,13 @@ nav::-webkit-scrollbar { display: none; }
               <span class="stat-num" style="font-size:56px;">1890</span>
               <span class="stat-label">Factory Roots</span>
             </div>
-
+            <!-- IMAGE PLACEHOLDER: factory detail / CNC machinery -->
+            <div class="img-placeholder" style="flex:1.2;">
+              <img src="images/factory-cnc.jpg" alt="" onerror="this.style.display='none'">
+              <div class="img-icon" style="font-size:24px;">◻</div>
+              <div class="img-path">images/factory-cnc.jpg</div>
+              <div class="img-label">CNC Precision ±0.5mm</div>
+            </div>
           </div>
         </div>
       </div>
@@ -2375,6 +2482,88 @@ document.addEventListener('touchend', e => {
 buildNav();
 updateCounter();
 document.getElementById('slide-01').classList.add('active');
+
+
+/* ============================================================
+   7. LIGHTBOX — click any image to expand, blur background
+   ============================================================ */
+const lightbox        = document.getElementById('lightbox');
+const lightboxImg     = document.getElementById('lightbox-img');
+const lightboxCaption = document.getElementById('lightbox-caption');
+const lightboxClose   = document.getElementById('lightbox-close');
+const lightboxBack    = document.getElementById('lightbox-backdrop');
+
+/* Open lightbox with a given src and caption */
+function openLightbox(src, caption) {
+  lightboxImg.src = src;
+  lightboxCaption.textContent = caption || '';
+  lightbox.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+/* Close lightbox */
+function closeLightbox() {
+  lightbox.classList.remove('open');
+  setTimeout(() => { lightboxImg.src = ''; }, 350);
+  document.body.style.overflow = '';
+}
+
+lightboxClose.addEventListener('click', closeLightbox);
+lightboxBack.addEventListener('click', closeLightbox);
+
+/* Esc key closes lightbox */
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && lightbox.classList.contains('open')) {
+    e.stopPropagation();
+    closeLightbox();
+  }
+}, { capture: true });
+
+/* Block slide navigation keys when lightbox is open */
+document.addEventListener('keydown', e => {
+  if (!lightbox.classList.contains('open')) return;
+  if (['ArrowLeft','ArrowRight','ArrowUp','ArrowDown',' ','Backspace'].includes(e.key)) {
+    e.stopImmediatePropagation();
+    e.preventDefault();
+  }
+}, { capture: true });
+
+/* Scan all img-placeholder elements that contain a real loaded <img> */
+function initLightbox() {
+  document.querySelectorAll('.img-placeholder').forEach(placeholder => {
+    const img = placeholder.querySelector('img');
+    if (!img) return;
+
+    /* Mark as lightbox-ready for hover CSS */
+    placeholder.classList.add('lb-ready');
+
+    placeholder.addEventListener('click', () => {
+      /* Use the img src — only open if image actually loaded */
+      if (!img.src || img.style.display === 'none' || img.naturalWidth === 0) return;
+
+      /* Caption from img-label if present */
+      const labelEl = placeholder.querySelector('.img-label');
+      const caption = labelEl ? labelEl.textContent.trim() : '';
+
+      openLightbox(img.src, caption);
+    });
+  });
+}
+
+/* Run after DOM is ready — small delay ensures images have had time to register */
+setTimeout(initLightbox, 300);
 </script>
+<!-- ========================================================
+     LIGHTBOX OVERLAY
+     ======================================================== -->
+<div id="lightbox">
+  <div id="lightbox-backdrop"></div>
+  <div id="lightbox-img-wrap">
+    <button id="lightbox-close" title="Close (Esc)">✕</button>
+    <img id="lightbox-img" src="" alt="">
+    <div id="lightbox-caption"></div>
+  </div>
+</div>
+
 </body>
 </html>
