@@ -1057,11 +1057,11 @@ nav::-webkit-scrollbar { display: none; }
         </div>
       </div>
 
-      <!-- Right: large factory image — occupies ~45% slide width -->
+      <!-- Right: large factory image — 550x295 aspect ratio -->
       <!-- IMAGE PLACEHOLDER: Factory Production Facility -->
       <!-- Replace with images/factory.jpg -->
       <div style="width:42%;display:flex;flex-direction:column;gap:0;">
-        <div class="img-placeholder" style="flex:1;">
+        <div class="img-placeholder" style="aspect-ratio:550/295;width:100%;">
           <img src="images/factory.jpg" alt="Factory Production Facility"
                onerror="this.style.display='none'"
                style="object-fit:cover;object-position:center center;">
@@ -1093,11 +1093,11 @@ nav::-webkit-scrollbar { display: none; }
           <!-- IMAGE PLACEHOLDER: Scandinavia Project -->
           <!-- Replace with images/region-scandinavia.jpg -->
           <div class="region-cell" style="padding:0;overflow:hidden;display:flex;flex-direction:column;">
-            <div style="padding:16px 20px 14px;">
+            <div style="padding:16px 20px 12px;">
               <p class="region-name">Scandinavia</p>
               <p class="region-countries">Norway · Sweden<br>Denmark · Finland</p>
             </div>
-            <div class="img-placeholder" style="height:180px;border:none;border-top:1px solid var(--border-dim);">
+            <div class="img-placeholder" style="flex:1;min-height:0;border:none;border-top:1px solid var(--border-dim);">
               <img src="images/region-scandinavia.jpg" alt="Scandinavia Project"
                    onerror="this.style.display='none'"
                    style="object-fit:cover;object-position:center center;">
@@ -1109,11 +1109,11 @@ nav::-webkit-scrollbar { display: none; }
           <!-- IMAGE PLACEHOLDER: Baltic Region Project -->
           <!-- Replace with images/region-baltic.jpg -->
           <div class="region-cell" style="padding:0;overflow:hidden;display:flex;flex-direction:column;">
-            <div style="padding:16px 20px 14px;">
+            <div style="padding:16px 20px 12px;">
               <p class="region-name">Baltic Region</p>
               <p class="region-countries">Latvia · Lithuania<br>Estonia</p>
             </div>
-            <div class="img-placeholder" style="height:180px;border:none;border-top:1px solid var(--border-dim);">
+            <div class="img-placeholder" style="flex:1;min-height:0;border:none;border-top:1px solid var(--border-dim);">
               <img src="images/region-baltic.jpg" alt="Baltic Region Project"
                    onerror="this.style.display='none'"
                    style="object-fit:cover;object-position:center center;">
@@ -1125,11 +1125,11 @@ nav::-webkit-scrollbar { display: none; }
           <!-- IMAGE PLACEHOLDER: Western Europe Project -->
           <!-- Replace with images/region-western-europe.jpg -->
           <div class="region-cell" style="padding:0;overflow:hidden;display:flex;flex-direction:column;">
-            <div style="padding:16px 20px 14px;">
+            <div style="padding:16px 20px 12px;">
               <p class="region-name">Western Europe</p>
               <p class="region-countries">UK · Netherlands<br>France · Germany</p>
             </div>
-            <div class="img-placeholder" style="height:180px;border:none;border-top:1px solid var(--border-dim);">
+            <div class="img-placeholder" style="flex:1;min-height:0;border:none;border-top:1px solid var(--border-dim);">
               <img src="images/region-western-europe.jpg" alt="Western Europe Project"
                    onerror="this.style.display='none'"
                    style="object-fit:cover;object-position:center center;">
@@ -1141,11 +1141,11 @@ nav::-webkit-scrollbar { display: none; }
           <!-- IMAGE PLACEHOLDER: International Project -->
           <!-- Replace with images/region-international.jpg -->
           <div class="region-cell" style="padding:0;overflow:hidden;display:flex;flex-direction:column;">
-            <div style="padding:16px 20px 14px;">
+            <div style="padding:16px 20px 12px;">
               <p class="region-name">Further Markets</p>
               <p class="region-countries">Italy · Switzerland<br>Korea · Canada · New Zealand</p>
             </div>
-            <div class="img-placeholder" style="height:180px;border:none;border-top:1px solid var(--border-dim);">
+            <div class="img-placeholder" style="flex:1;min-height:0;border:none;border-top:1px solid var(--border-dim);">
               <img src="images/region-international.jpg" alt="International Project"
                    onerror="this.style.display='none'"
                    style="object-fit:cover;object-position:center center;">
@@ -1439,9 +1439,9 @@ nav::-webkit-scrollbar { display: none; }
       </div>
 
       <!-- Right: image + stat -->
-      <div style="width:480px;display:flex;flex-direction:column;gap:12px;">
-        <!-- IMAGE PLACEHOLDER: VST multi-story building system -->
-        <div class="img-placeholder" style="flex:1;">
+      <div style="width:420px;display:flex;flex-direction:column;gap:12px;">
+        <!-- IMAGE PLACEHOLDER: VST multi-story building system — 409x523 portrait -->
+        <div class="img-placeholder" style="aspect-ratio:409/523;width:100%;">
           <img src="images/vst-system.jpg" alt="VST System" onerror="this.style.display='none'">
           <div class="img-icon">◻</div>
           <div class="img-path">images/vst-system.jpg</div>
@@ -2130,8 +2130,8 @@ nav::-webkit-scrollbar { display: none; }
         </div>
 
         <div style="display:grid;grid-template-columns:2fr 1fr;gap:10px;flex:1;">
-          <!-- IMAGE PLACEHOLDER: factory main floor production -->
-          <div class="img-placeholder">
+          <!-- IMAGE PLACEHOLDER: factory main floor production — 550x295 ratio -->
+          <div class="img-placeholder" style="aspect-ratio:550/295;">
             <img src="images/factory.jpg" alt="" onerror="this.style.display='none'">
             <div class="img-icon" style="font-size:36px;">◫</div>
             <div class="img-path">images/factory.jpg</div>
@@ -2147,13 +2147,7 @@ nav::-webkit-scrollbar { display: none; }
               <span class="stat-num" style="font-size:56px;">1890</span>
               <span class="stat-label">Factory Roots</span>
             </div>
-            <!-- IMAGE PLACEHOLDER: factory detail / CNC machinery -->
-            <div class="img-placeholder" style="flex:1.2;">
-              <img src="images/factory-cnc.jpg" alt="" onerror="this.style.display='none'">
-              <div class="img-icon" style="font-size:24px;">◻</div>
-              <div class="img-path">images/factory-cnc.jpg</div>
-              <div class="img-label">CNC Precision ±0.5mm</div>
-            </div>
+
           </div>
         </div>
       </div>
