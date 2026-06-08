@@ -371,7 +371,7 @@ nav::-webkit-scrollbar { display: none; }
   position: absolute;
   inset: 0;
   width: 100%; height: 100%;
-  object-fit: contain;
+  object-fit: cover;
   z-index: 1;
 }
 
@@ -655,6 +655,7 @@ nav::-webkit-scrollbar { display: none; }
   display: flex;
   flex-direction: column;
   gap: 14px;
+  overflow: hidden;
 }
 
 .window-name {
@@ -947,16 +948,17 @@ nav::-webkit-scrollbar { display: none; }
     <section class="slide" id="slide-01" data-chapter="Overview">
       <div style="display:flex;flex-direction:column;width:100%;height:100%;gap:0;">
 
-        <!-- TOP ZONE: Logo centered -->
-        <div style="display:flex;justify-content:center;align-items:center;padding-bottom:28px;border-bottom:1px solid var(--border-dim);">
+        <!-- TOP ZONE: Logo centered — no frame, just the image -->
+        <div style="display:flex;justify-content:center;align-items:center;padding-bottom:24px;border-bottom:1px solid var(--border-dim);">
           <!-- IMAGE PLACEHOLDER: WWL Homes Logo -->
           <!-- Replace images/wwl-logo.png with your actual logo file -->
-          <div class="img-placeholder" style="height:68px;width:220px;border-color:var(--gold-deep);background:transparent;">
+          <!-- When logo is present the border/background disappear automatically -->
+          <div style="height:72px;width:280px;position:relative;display:flex;align-items:center;justify-content:center;">
             <img src="images/wwl-logo.png" alt="WWL Homes Logo"
                  onerror="this.style.display='none'"
-                 style="object-fit:contain;padding:10px;">
-            <div class="img-icon" style="font-size:26px;color:var(--gold);">◈</div>
-            <div class="img-label" style="font-size:12px;letter-spacing:0.18em;">images/wwl-logo.png</div>
+                 style="max-height:72px;max-width:280px;width:auto;height:auto;object-fit:contain;position:relative;z-index:1;">
+            <!-- Fallback text shown only when logo image is missing -->
+            <span style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:600;letter-spacing:0.14em;color:var(--gold);text-transform:uppercase;position:absolute;">WWL HOMES</span>
           </div>
         </div>
 
@@ -1095,10 +1097,10 @@ nav::-webkit-scrollbar { display: none; }
               <p class="region-name">Scandinavia</p>
               <p class="region-countries">Norway · Sweden<br>Denmark · Finland</p>
             </div>
-            <div class="img-placeholder" style="flex:1;border:none;border-top:1px solid var(--border-dim);">
+            <div class="img-placeholder" style="height:180px;border:none;border-top:1px solid var(--border-dim);">
               <img src="images/region-scandinavia.jpg" alt="Scandinavia Project"
                    onerror="this.style.display='none'"
-                   style="object-fit:cover;">
+                   style="object-fit:cover;object-position:center center;">
               <div class="img-icon" style="font-size:32px;">◫</div>
               <div class="img-label">images/region-scandinavia.jpg</div>
             </div>
@@ -1111,10 +1113,10 @@ nav::-webkit-scrollbar { display: none; }
               <p class="region-name">Baltic Region</p>
               <p class="region-countries">Latvia · Lithuania<br>Estonia</p>
             </div>
-            <div class="img-placeholder" style="flex:1;border:none;border-top:1px solid var(--border-dim);">
+            <div class="img-placeholder" style="height:180px;border:none;border-top:1px solid var(--border-dim);">
               <img src="images/region-baltic.jpg" alt="Baltic Region Project"
                    onerror="this.style.display='none'"
-                   style="object-fit:cover;">
+                   style="object-fit:cover;object-position:center center;">
               <div class="img-icon" style="font-size:32px;">◫</div>
               <div class="img-label">images/region-baltic.jpg</div>
             </div>
@@ -1127,10 +1129,10 @@ nav::-webkit-scrollbar { display: none; }
               <p class="region-name">Western Europe</p>
               <p class="region-countries">UK · Netherlands<br>France · Germany</p>
             </div>
-            <div class="img-placeholder" style="flex:1;border:none;border-top:1px solid var(--border-dim);">
+            <div class="img-placeholder" style="height:180px;border:none;border-top:1px solid var(--border-dim);">
               <img src="images/region-western-europe.jpg" alt="Western Europe Project"
                    onerror="this.style.display='none'"
-                   style="object-fit:cover;">
+                   style="object-fit:cover;object-position:center center;">
               <div class="img-icon" style="font-size:32px;">◫</div>
               <div class="img-label">images/region-western-europe.jpg</div>
             </div>
@@ -1143,10 +1145,10 @@ nav::-webkit-scrollbar { display: none; }
               <p class="region-name">Further Markets</p>
               <p class="region-countries">Italy · Switzerland<br>Korea · Canada · New Zealand</p>
             </div>
-            <div class="img-placeholder" style="flex:1;border:none;border-top:1px solid var(--border-dim);">
+            <div class="img-placeholder" style="height:180px;border:none;border-top:1px solid var(--border-dim);">
               <img src="images/region-international.jpg" alt="International Project"
                    onerror="this.style.display='none'"
-                   style="object-fit:cover;">
+                   style="object-fit:cover;object-position:center center;">
               <div class="img-icon" style="font-size:32px;">◫</div>
               <div class="img-label">images/region-international.jpg</div>
             </div>
@@ -1178,15 +1180,15 @@ nav::-webkit-scrollbar { display: none; }
           <div class="h-line"></div>
         </div>
 
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;flex:1;">
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;height:680px;">
 
           <div class="tech-card" style="padding:0;overflow:hidden;gap:0;">
             <!-- IMAGE PLACEHOLDER: Wall Panel Technology -->
             <!-- Replace with images/tech-wall-panels.jpg -->
-            <div class="img-placeholder" style="height:160px;border:none;border-bottom:1px solid var(--border-dim);">
+            <div class="img-placeholder" style="height:280px;border:none;border-bottom:1px solid var(--border-dim);">
               <img src="images/tech-wall-panels.jpg" alt="Wall Panel Technology"
-                   onerror="this.style.display:'none'"
-                   style="object-fit:cover;">
+                   onerror="this.style.display='none'"
+                   style="object-fit:cover;object-position:center center;">
               <div class="img-icon" style="font-size:28px;">◫</div>
               <div class="img-label">images/tech-wall-panels.jpg</div>
             </div>
@@ -1201,10 +1203,10 @@ nav::-webkit-scrollbar { display: none; }
           <div class="tech-card" style="padding:0;overflow:hidden;gap:0;">
             <!-- IMAGE PLACEHOLDER: Modular Building Project -->
             <!-- Replace with images/tech-modular.jpg -->
-            <div class="img-placeholder" style="height:160px;border:none;border-bottom:1px solid var(--border-dim);">
+            <div class="img-placeholder" style="height:280px;border:none;border-bottom:1px solid var(--border-dim);">
               <img src="images/tech-modular.jpg" alt="Modular Building Project"
-                   onerror="this.style.display:'none'"
-                   style="object-fit:cover;">
+                   onerror="this.style.display='none'"
+                   style="object-fit:cover;object-position:center center;">
               <div class="img-icon" style="font-size:28px;">◫</div>
               <div class="img-label">images/tech-modular.jpg</div>
             </div>
@@ -1219,10 +1221,10 @@ nav::-webkit-scrollbar { display: none; }
           <div class="tech-card" style="padding:0;overflow:hidden;gap:0;">
             <!-- IMAGE PLACEHOLDER: VST Construction System -->
             <!-- Replace with images/tech-vst.jpg -->
-            <div class="img-placeholder" style="height:160px;border:none;border-bottom:1px solid var(--border-dim);">
+            <div class="img-placeholder" style="height:280px;border:none;border-bottom:1px solid var(--border-dim);">
               <img src="images/tech-vst.jpg" alt="VST Construction System"
-                   onerror="this.style.display:'none'"
-                   style="object-fit:cover;">
+                   onerror="this.style.display='none'"
+                   style="object-fit:cover;object-position:center center;">
               <div class="img-icon" style="font-size:28px;">◫</div>
               <div class="img-label">images/tech-vst.jpg</div>
             </div>
@@ -1295,9 +1297,9 @@ nav::-webkit-scrollbar { display: none; }
       </div>
 
       <!-- Right: image + specs -->
-      <div style="width:300px;display:flex;flex-direction:column;gap:10px;">
+      <div style="width:420px;display:flex;flex-direction:column;gap:10px;">
         <!-- IMAGE PLACEHOLDER: wall panels factory production -->
-        <div class="img-placeholder" style="height:190px;">
+        <div class="img-placeholder" style="height:320px;">
           <img src="images/wall-panels.jpg" alt="Wall Panels" onerror="this.style.display='none'">
           <div class="img-icon">◫</div>
           <div class="img-path">images/wall-panels.jpg</div>
@@ -1341,10 +1343,10 @@ nav::-webkit-scrollbar { display: none; }
           <div class="h-line"></div>
         </div>
 
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;flex:1;">
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;height:600px;">
           <div style="background:var(--bg-2);border:1px solid var(--border);padding:20px 16px;display:flex;flex-direction:column;gap:10px;">
             <!-- IMAGE PLACEHOLDER: residential apartments modular -->
-            <div class="img-placeholder" style="height:100px;">
+            <div class="img-placeholder" style="height:200px;">
               <img src="images/modular-residential.jpg" alt="" onerror="this.style.display='none'">
               <div class="img-icon" style="font-size:22px;">⬡</div>
               <div class="img-label">images/modular-residential.jpg</div>
@@ -1354,7 +1356,7 @@ nav::-webkit-scrollbar { display: none; }
           </div>
           <div style="background:var(--bg-2);border:1px solid var(--border);padding:20px 16px;display:flex;flex-direction:column;gap:10px;">
             <!-- IMAGE PLACEHOLDER: hotels hospitality modular -->
-            <div class="img-placeholder" style="height:100px;">
+            <div class="img-placeholder" style="height:200px;">
               <img src="images/modular-hotel.jpg" alt="" onerror="this.style.display='none'">
               <div class="img-icon" style="font-size:22px;">⬡</div>
               <div class="img-label">images/modular-hotel.jpg</div>
@@ -1364,7 +1366,7 @@ nav::-webkit-scrollbar { display: none; }
           </div>
           <div style="background:var(--bg-2);border:1px solid var(--border);padding:20px 16px;display:flex;flex-direction:column;gap:10px;">
             <!-- IMAGE PLACEHOLDER: commercial offices modular -->
-            <div class="img-placeholder" style="height:100px;">
+            <div class="img-placeholder" style="height:200px;">
               <img src="images/modular-office.jpg" alt="" onerror="this.style.display='none'">
               <div class="img-icon" style="font-size:22px;">⬡</div>
               <div class="img-label">images/modular-office.jpg</div>
@@ -1374,7 +1376,7 @@ nav::-webkit-scrollbar { display: none; }
           </div>
           <div style="background:var(--bg-2);border:1px solid var(--border);padding:20px 16px;display:flex;flex-direction:column;gap:10px;">
             <!-- IMAGE PLACEHOLDER: social affordable modular -->
-            <div class="img-placeholder" style="height:100px;">
+            <div class="img-placeholder" style="height:200px;">
               <img src="images/modular-social.jpg" alt="" onerror="this.style.display='none'">
               <div class="img-icon" style="font-size:22px;">⬡</div>
               <div class="img-label">images/modular-social.jpg</div>
@@ -1437,7 +1439,7 @@ nav::-webkit-scrollbar { display: none; }
       </div>
 
       <!-- Right: image + stat -->
-      <div style="width:320px;display:flex;flex-direction:column;gap:12px;">
+      <div style="width:480px;display:flex;flex-direction:column;gap:12px;">
         <!-- IMAGE PLACEHOLDER: VST multi-story building system -->
         <div class="img-placeholder" style="flex:1;">
           <img src="images/vst-system.jpg" alt="VST System" onerror="this.style.display='none'">
@@ -1545,67 +1547,76 @@ nav::-webkit-scrollbar { display: none; }
         </div>
 
         <div class="window-cards" style="flex:1;">
-          <div class="window-card">
+          <div class="window-card" style="padding:0;overflow:hidden;">
             <!-- IMAGE PLACEHOLDER: outward passive window product -->
-            <div class="img-placeholder" style="height:130px;">
-              <img src="images/windows-passive.jpg" alt="" onerror="this.style.display='none'">
+            <div class="img-placeholder" style="flex:1;min-height:320px;border:none;border-bottom:1px solid var(--border-dim);">
+              <img src="images/windows-passive.jpg" alt="" onerror="this.style.display='none'"
+                   style="object-fit:cover;object-position:center center;">
               <div class="img-icon">▭</div>
               <div class="img-label">images/windows-passive.jpg</div>
             </div>
-            <span class="window-name">Outward Passive</span>
-            <div class="window-spec">
-              <div class="window-spec-row">
-                <span class="window-spec-key">U-value</span>
-                <span class="window-spec-val">0.75 W/m²K</span>
+            <div style="padding:20px 22px 24px;">
+              <span class="window-name">Outward Passive</span>
+              <div class="window-spec" style="margin-top:10px;">
+                <div class="window-spec-row">
+                  <span class="window-spec-key">U-value</span>
+                  <span class="window-spec-val">0.75 W/m²K</span>
+                </div>
+                <div class="window-spec-row">
+                  <span class="window-spec-key">Sound</span>
+                  <span class="window-spec-val">Rw 33–48 dB</span>
+                </div>
               </div>
-              <div class="window-spec-row">
-                <span class="window-spec-key">Sound</span>
-                <span class="window-spec-val">Rw 33–48 dB</span>
-              </div>
+              <p style="font-size:15px;color:var(--text);line-height:1.55;margin-top:10px;">Passive-standard outward-opening window. Triple glazing, maximum thermal performance.</p>
             </div>
-            <p style="font-size:16px;color:var(--text);line-height:1.55;">Passive-standard outward-opening window. Triple glazing, maximum thermal performance.</p>
           </div>
 
-          <div class="window-card">
+          <div class="window-card" style="padding:0;overflow:hidden;">
             <!-- IMAGE PLACEHOLDER: WWL ECO 92 window product -->
-            <div class="img-placeholder" style="height:130px;">
-              <img src="images/windows-eco92.jpg" alt="" onerror="this.style.display='none'">
+            <div class="img-placeholder" style="flex:1;min-height:320px;border:none;border-bottom:1px solid var(--border-dim);">
+              <img src="images/windows-eco92.jpg" alt="" onerror="this.style.display='none'"
+                   style="object-fit:cover;object-position:center center;">
               <div class="img-icon">▭</div>
               <div class="img-label">images/windows-eco92.jpg</div>
             </div>
-            <span class="window-name">WWL ECO 92</span>
-            <div class="window-spec">
-              <div class="window-spec-row">
-                <span class="window-spec-key">U-value</span>
-                <span class="window-spec-val">0.78 W/m²K</span>
+            <div style="padding:20px 22px 24px;">
+              <span class="window-name">WWL ECO 92</span>
+              <div class="window-spec" style="margin-top:10px;">
+                <div class="window-spec-row">
+                  <span class="window-spec-key">U-value</span>
+                  <span class="window-spec-val">0.78 W/m²K</span>
+                </div>
+                <div class="window-spec-row">
+                  <span class="window-spec-key">Sound</span>
+                  <span class="window-spec-val">Rw 33–48 dB</span>
+                </div>
               </div>
-              <div class="window-spec-row">
-                <span class="window-spec-key">Sound</span>
-                <span class="window-spec-val">Rw 33–48 dB</span>
-              </div>
+              <p style="font-size:15px;color:var(--text);line-height:1.55;margin-top:10px;">Inward-opening 92 mm profile. Double seal, aluminium cladding option, custom RAL colour.</p>
             </div>
-            <p style="font-size:16px;color:var(--text);line-height:1.55;">Inward-opening 92 mm profile. Double seal, aluminium cladding option, custom RAL colour.</p>
           </div>
 
-          <div class="window-card">
+          <div class="window-card" style="padding:0;overflow:hidden;">
             <!-- IMAGE PLACEHOLDER: sliding doors product -->
-            <div class="img-placeholder" style="height:130px;">
-              <img src="images/windows-sliding.jpg" alt="" onerror="this.style.display='none'">
+            <div class="img-placeholder" style="flex:1;min-height:320px;border:none;border-bottom:1px solid var(--border-dim);">
+              <img src="images/windows-sliding.jpg" alt="" onerror="this.style.display='none'"
+                   style="object-fit:cover;object-position:center center;">
               <div class="img-icon">▭</div>
               <div class="img-label">images/windows-sliding.jpg</div>
             </div>
-            <span class="window-name">Sliding Doors</span>
-            <div class="window-spec">
-              <div class="window-spec-row">
-                <span class="window-spec-key">Thermal Bridge</span>
-                <span class="window-spec-val">Free</span>
+            <div style="padding:20px 22px 24px;">
+              <span class="window-name">Sliding Doors</span>
+              <div class="window-spec" style="margin-top:10px;">
+                <div class="window-spec-row">
+                  <span class="window-spec-key">Thermal Bridge</span>
+                  <span class="window-spec-val">Free</span>
+                </div>
+                <div class="window-spec-row">
+                  <span class="window-spec-key">Sound</span>
+                  <span class="window-spec-val">Rw 36–44 dB</span>
+                </div>
               </div>
-              <div class="window-spec-row">
-                <span class="window-spec-key">Sound</span>
-                <span class="window-spec-val">Rw 36–44 dB</span>
-              </div>
+              <p style="font-size:15px;color:var(--text);line-height:1.55;margin-top:10px;">Large format sliding glass doors. Triple-sealed, custom sizes, left/right opening.</p>
             </div>
-            <p style="font-size:16px;color:var(--text);line-height:1.55;">Large format sliding glass doors. Triple-sealed, custom sizes, left/right opening.</p>
           </div>
         </div>
 
@@ -1791,9 +1802,9 @@ nav::-webkit-scrollbar { display: none; }
           <div class="cert-badge" style="padding:0;overflow:hidden;display:flex;flex-direction:column;">
             <!-- IMAGE PLACEHOLDER: ISO Certificate -->
             <!-- Replace with images/cert-iso9001.jpg -->
-            <div class="img-placeholder" style="height:80px;border:none;border-bottom:1px solid var(--border-dim);">
+            <div class="img-placeholder" style="height:260px;border:none;border-bottom:1px solid var(--border-dim);">
               <img src="images/cert-iso9001.jpg" alt="ISO 9001 Certificate"
-                   onerror="this.style.display:'none'" style="object-fit:contain;padding:8px;">
+                   onerror="this.style.display='none'" style="object-fit:contain;padding:12px;background:rgba(255,255,255,0.04);">
               <div class="img-icon" style="font-size:26px;">✦</div>
               <div class="img-label" style="font-size:11px;">images/cert-iso9001.jpg</div>
             </div>
@@ -1807,9 +1818,9 @@ nav::-webkit-scrollbar { display: none; }
           <div class="cert-badge" style="padding:0;overflow:hidden;display:flex;flex-direction:column;">
             <!-- IMAGE PLACEHOLDER: TÜV Certification -->
             <!-- Replace with images/cert-tuv.jpg -->
-            <div class="img-placeholder" style="height:80px;border:none;border-bottom:1px solid var(--border-dim);">
+            <div class="img-placeholder" style="height:260px;border:none;border-bottom:1px solid var(--border-dim);">
               <img src="images/cert-tuv.jpg" alt="TÜV Certification"
-                   onerror="this.style.display:'none'" style="object-fit:contain;padding:8px;">
+                   onerror="this.style.display='none'" style="object-fit:contain;padding:12px;background:rgba(255,255,255,0.04);">
               <div class="img-icon" style="font-size:26px;">✦</div>
               <div class="img-label" style="font-size:11px;">images/cert-tuv.jpg</div>
             </div>
@@ -1823,9 +1834,9 @@ nav::-webkit-scrollbar { display: none; }
           <div class="cert-badge" style="padding:0;overflow:hidden;display:flex;flex-direction:column;">
             <!-- IMAGE PLACEHOLDER: CE Marking -->
             <!-- Replace with images/cert-ce.jpg -->
-            <div class="img-placeholder" style="height:80px;border:none;border-bottom:1px solid var(--border-dim);">
+            <div class="img-placeholder" style="height:260px;border:none;border-bottom:1px solid var(--border-dim);">
               <img src="images/cert-ce.jpg" alt="CE Marking"
-                   onerror="this.style.display:'none'" style="object-fit:contain;padding:8px;">
+                   onerror="this.style.display='none'" style="object-fit:contain;padding:12px;background:rgba(255,255,255,0.04);">
               <div class="img-icon" style="font-size:26px;">✦</div>
               <div class="img-label" style="font-size:11px;">images/cert-ce.jpg</div>
             </div>
@@ -1839,9 +1850,9 @@ nav::-webkit-scrollbar { display: none; }
           <div class="cert-badge" style="padding:0;overflow:hidden;display:flex;flex-direction:column;">
             <!-- IMAGE PLACEHOLDER: FSC Certification -->
             <!-- Replace with images/cert-fsc.jpg -->
-            <div class="img-placeholder" style="height:80px;border:none;border-bottom:1px solid var(--border-dim);">
+            <div class="img-placeholder" style="height:260px;border:none;border-bottom:1px solid var(--border-dim);">
               <img src="images/cert-fsc.jpg" alt="FSC Certification"
-                   onerror="this.style.display:'none'" style="object-fit:contain;padding:8px;">
+                   onerror="this.style.display='none'" style="object-fit:contain;padding:12px;background:rgba(255,255,255,0.04);">
               <div class="img-icon" style="font-size:26px;">✦</div>
               <div class="img-label" style="font-size:11px;">images/cert-fsc.jpg</div>
             </div>
@@ -1855,9 +1866,9 @@ nav::-webkit-scrollbar { display: none; }
           <div class="cert-badge" style="padding:0;overflow:hidden;display:flex;flex-direction:column;">
             <!-- IMAGE PLACEHOLDER: AAA Credit Rating -->
             <!-- Replace with images/cert-aaa.jpg -->
-            <div class="img-placeholder" style="height:80px;border:none;border-bottom:1px solid var(--border-dim);">
+            <div class="img-placeholder" style="height:260px;border:none;border-bottom:1px solid var(--border-dim);">
               <img src="images/cert-aaa.jpg" alt="AAA Credit Rating"
-                   onerror="this.style.display:'none'" style="object-fit:contain;padding:8px;">
+                   onerror="this.style.display='none'" style="object-fit:contain;padding:12px;background:rgba(255,255,255,0.04);">
               <div class="img-icon" style="font-size:26px;">✦</div>
               <div class="img-label" style="font-size:11px;">images/cert-aaa.jpg</div>
             </div>
@@ -1871,9 +1882,9 @@ nav::-webkit-scrollbar { display: none; }
           <div class="cert-badge" style="padding:0;overflow:hidden;display:flex;flex-direction:column;">
             <!-- IMAGE PLACEHOLDER: LIAA Export Award -->
             <!-- Replace with images/cert-liaa.jpg -->
-            <div class="img-placeholder" style="height:80px;border:none;border-bottom:1px solid var(--border-dim);">
+            <div class="img-placeholder" style="height:260px;border:none;border-bottom:1px solid var(--border-dim);">
               <img src="images/cert-liaa.jpg" alt="LIAA Export Award"
-                   onerror="this.style.display:'none'" style="object-fit:contain;padding:8px;">
+                   onerror="this.style.display='none'" style="object-fit:contain;padding:12px;background:rgba(255,255,255,0.04);">
               <div class="img-icon" style="font-size:26px;">✦</div>
               <div class="img-label" style="font-size:11px;">images/cert-liaa.jpg</div>
             </div>
