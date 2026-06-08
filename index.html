@@ -1,0 +1,2376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WWL Homes — Technology Driven Homes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   CSS VARIABLES & RESET
+   ============================================================ */
+:root {
+  --bg:        #081B1B;
+  --bg-2:      #0b2020;
+  --bg-3:      #0e2626;
+  --gold:      #569578;   /* primary accent — teal-green */
+  --gold-deep: #275D46;   /* secondary accent — deep forest */
+  --cream:     #EEE8B2;   /* primary text */
+  --text:      rgba(238,232,178,0.80);   /* secondary text */
+  --text-dim:  rgba(238,232,178,0.42);   /* muted text */
+  --border:    rgba(39,93,70,0.55);      /* secondary accent borders */
+  --border-dim:rgba(39,93,70,0.22);      /* subtle borders */
+  --sidebar-w: 200px;
+  --transition: 0.60s cubic-bezier(0.25,0.46,0.45,0.94);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 400;           /* default weight raised from 300 */
+}
+
+/* ============================================================
+   LAYOUT SHELL — fixed 16:9 canvas scaling
+   ============================================================ */
+
+/* Full-page host */
+#app {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+/* Sidebar stays native — does NOT scale */
+#sidebar {
+  width: var(--sidebar-w);
+  min-width: var(--sidebar-w);
+  height: 100vh;
+  background: rgba(6,20,20,0.98);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: 28px 0 20px;
+  z-index: 20;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.sidebar-logo {
+  padding: 0 20px 22px;
+  border-bottom: 1px solid var(--border-dim);
+  margin-bottom: 16px;
+}
+
+.sidebar-logo span {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: var(--gold);
+  text-transform: uppercase;
+}
+
+.sidebar-logo p {
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  margin-top: 3px;
+}
+
+nav { flex: 1; overflow-y: auto; scrollbar-width: none; }
+nav::-webkit-scrollbar { display: none; }
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 20px;
+  cursor: pointer;
+  font-size: 10.5px;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  transition: all 0.25s ease;
+  border-left: 2px solid transparent;
+}
+
+.nav-item:hover { color: var(--cream); background: rgba(86,149,120,0.07); }
+
+.nav-item.active {
+  color: var(--gold);
+  border-left-color: var(--gold);
+  background: rgba(86,149,120,0.10);
+}
+
+.nav-num { font-size: 8px; color: var(--text-dim); min-width: 14px; }
+.nav-item.active .nav-num { color: var(--gold); }
+
+.sidebar-footer {
+  padding: 14px 20px 0;
+  border-top: 1px solid var(--border-dim);
+  font-size: 8.5px;
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  line-height: 1.8;
+}
+
+/* Viewport area to the right of sidebar */
+#viewport {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+}
+
+/* The 1920×1080 canvas — scaled by JS */
+#slide-stage {
+  position: absolute;
+  width: 1920px;
+  height: 1080px;
+  transform-origin: center center;
+  background: var(--bg);
+  overflow: hidden;
+  /* transform + left + top applied by JS scaleStage() */
+}
+
+/* ============================================================
+   COUNTER — inside canvas, top-right
+   ============================================================ */
+#counter {
+  position: absolute;
+  top: 30px;
+  right: 44px;
+  font-size: 18px;
+  letter-spacing: 0.18em;
+  color: var(--text-dim);
+  z-index: 50;
+  pointer-events: none;
+}
+#counter span { color: var(--gold); }
+
+/* ============================================================
+   PROGRESS BAR — inside canvas, bottom
+   ============================================================ */
+#progress-bar {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--border-dim);
+  z-index: 50;
+  pointer-events: none;
+}
+#progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold-deep), var(--gold));
+  transition: width 0.5s ease;
+}
+
+/* ============================================================
+   BOTTOM NAV ARROWS — inside canvas, bottom-right
+   ============================================================ */
+.nav-arrow {
+  position: absolute;
+  bottom: 36px;
+  z-index: 50;
+  background: rgba(8,27,27,0.7);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  width: 58px; height: 58px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: all 0.25s;
+  font-size: 22px;
+  backdrop-filter: blur(4px);
+}
+.nav-arrow:hover { border-color: var(--gold); color: var(--gold); background: rgba(39,93,70,0.18); }
+#prev-btn { right: 112px; }
+#next-btn { right: 36px; }
+
+/* ============================================================
+   SIDE ARROWS — large click zones on left/right of canvas
+   ============================================================ */
+.side-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 50;
+  background: rgba(8,27,27,0.45);
+  border: 1px solid rgba(39,93,70,0.35);
+  color: rgba(238,232,178,0.35);
+  width: 60px;
+  height: 110px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: all 0.25s;
+  font-size: 32px;
+  letter-spacing: -0.05em;
+  backdrop-filter: blur(4px);
+  user-select: none;
+}
+.side-arrow:hover {
+  background: rgba(39,93,70,0.25);
+  border-color: var(--gold);
+  color: var(--gold);
+}
+#side-prev { left: 14px; }
+#side-next { right: 14px; }
+
+/* ============================================================
+   SLIDES BASE
+   ============================================================ */
+.slide {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  padding: 64px 80px 72px 72px;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(40px);
+  transition: opacity var(--transition), transform var(--transition);
+  overflow: hidden;
+}
+
+.slide.active  { opacity: 1; pointer-events: all; transform: translateX(0); }
+.slide.exit    { opacity: 0; transform: translateX(-40px); }
+
+.slide::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  opacity: 0.45;
+}
+
+/* ============================================================
+   TYPOGRAPHY UTILITIES
+   ============================================================ */
+.eyebrow {
+  font-size: 13px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 14px;
+  display: block;
+}
+
+.hero-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 400;
+  line-height: 1.06;
+  color: var(--cream);
+}
+
+.section-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 58px;
+  font-weight: 400;
+  color: var(--cream);
+  line-height: 1.08;
+  margin-bottom: 8px;
+}
+
+.body-text {
+  font-size: 20px;
+  line-height: 1.72;
+  color: var(--cream);
+  font-weight: 400;
+}
+
+.body-text.dim {
+  color: var(--text);
+  font-size: 17px;
+}
+
+.label {
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.gold  { color: var(--gold); }
+.cream { color: var(--cream); }
+
+.h-line {
+  width: 56px; height: 1px;
+  background: var(--gold);
+  opacity: 0.55;
+  margin: 18px 0 24px;
+}
+
+/* ============================================================
+   STAT BLOCK
+   ============================================================ */
+.stat-block { display: flex; flex-direction: column; }
+
+.stat-num {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 72px;
+  font-weight: 400;
+  color: var(--cream);
+  line-height: 1;
+}
+.stat-num.large { font-size: 96px; }
+
+.stat-label {
+  font-size: 13px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-top: 8px;
+}
+
+/* ============================================================
+   IMAGE PLACEHOLDER — thin #275D46 border, #569578 hover, architectural feel
+   ============================================================ */
+.img-placeholder {
+  background: var(--bg-2);
+  border: 1px solid var(--gold-deep);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.3s;
+}
+
+.img-placeholder:hover {
+  border-color: var(--gold);
+}
+
+/* subtle architectural grid pattern */
+.img-placeholder::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(86,149,120,0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(86,149,120,0.06) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+}
+
+.img-placeholder img {
+  position: absolute;
+  inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  z-index: 1;
+}
+
+/* minimal label bar at bottom */
+.img-placeholder .img-label {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  padding: 10px 16px;
+  background: rgba(8,27,27,0.88);
+  border-top: 1px solid rgba(39,93,70,0.40);
+  font-size: 11px;
+  letter-spacing: 0.20em;
+  text-transform: uppercase;
+  color: var(--gold);
+  z-index: 2;
+  text-align: center;
+}
+
+.img-placeholder .img-icon {
+  font-size: 40px;
+  color: rgba(86,149,120,0.25);
+  z-index: 2;
+}
+
+.img-placeholder .img-path {
+  font-size: 11px;
+  letter-spacing: 0.10em;
+  color: rgba(86,149,120,0.35);
+  z-index: 2;
+  font-family: monospace;
+}
+
+/* ============================================================
+   CERT BADGE
+   ============================================================ */
+.cert-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.cert-badge {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  padding: 26px 20px;
+  text-align: center;
+  transition: border-color 0.3s;
+}
+.cert-badge:hover { border-color: var(--gold); }
+
+.cert-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 32px;
+  font-weight: 600;
+  color: var(--gold);
+  display: block;
+  margin-bottom: 8px;
+}
+
+.cert-title {
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--cream);
+  display: block;
+  margin-bottom: 6px;
+}
+
+.cert-desc {
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.55;
+}
+
+/* ============================================================
+   TECH CARD
+   ============================================================ */
+.tech-card {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  padding: 32px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: border-color 0.3s, background 0.3s;
+}
+.tech-card:hover { border-color: rgba(86,149,120,0.55); background: var(--bg-3); }
+
+.tech-num {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 50px;
+  color: rgba(86,149,120,0.20);
+  line-height: 1;
+  font-weight: 400;
+}
+
+.tech-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 32px;
+  color: var(--cream);
+  font-weight: 400;
+}
+
+/* ============================================================
+   SPEC ROW
+   ============================================================ */
+.spec-row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--border-dim);
+}
+
+.spec-key {
+  font-size: 13px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  min-width: 170px;
+}
+
+.spec-val {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 26px;
+  color: var(--cream);
+}
+
+/* ============================================================
+   CHECK LIST — larger, more readable
+   ============================================================ */
+.check-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+
+.check-list li {
+  font-size: 17px;
+  color: var(--cream);
+  padding-left: 24px;
+  position: relative;
+  line-height: 1.5;
+}
+
+.check-list li::before {
+  content: '—';
+  position: absolute;
+  left: 0;
+  color: var(--gold);
+  font-size: 14px;
+}
+
+/* ============================================================
+   REGION GRID
+   ============================================================ */
+.region-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--border-dim);
+}
+
+.region-cell { background: var(--bg-2); padding: 28px 28px; }
+
+.region-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 30px;
+  color: var(--cream);
+  margin-bottom: 10px;
+  font-weight: 400;
+}
+
+.region-countries {
+  font-size: 17px;
+  color: var(--text);
+  letter-spacing: 0.06em;
+  line-height: 1.75;
+}
+
+/* ============================================================
+   PROCESS STEPS
+   ============================================================ */
+.process-track { display: flex; gap: 0; height: 100%; }
+
+.process-step {
+  flex: 1;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  margin-right: -1px;
+  padding: 36px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: relative;
+  transition: background 0.3s;
+}
+.process-step:hover { background: var(--bg-3); }
+
+.process-step::after {
+  content: '→';
+  position: absolute;
+  right: -16px; top: 50%;
+  transform: translateY(-50%);
+  color: var(--gold);
+  font-size: 18px;
+  z-index: 5;
+  background: var(--bg);
+  padding: 2px 2px;
+}
+.process-step:last-child::after { display: none; }
+
+.step-time {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 40px;
+  color: var(--gold);
+  line-height: 1;
+}
+
+.step-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 26px;
+  color: var(--cream);
+}
+
+.step-body {
+  font-size: 15px;
+  color: var(--text);
+  line-height: 1.65;
+}
+
+/* ============================================================
+   ENERGY
+   ============================================================ */
+.energy-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.energy-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  background: var(--bg-2);
+  border: 1px solid var(--border-dim);
+  padding: 18px 20px;
+}
+
+.energy-num-badge {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 30px;
+  color: var(--gold);
+  line-height: 1;
+  min-width: 22px;
+}
+
+.energy-item-title {
+  font-size: 14px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--cream);
+  margin-bottom: 4px;
+}
+
+.energy-item-body {
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.5;
+}
+
+/* ============================================================
+   WINDOW PRODUCT CARD
+   ============================================================ */
+.window-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.window-card {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  padding: 26px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.window-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 30px;
+  color: var(--cream);
+}
+
+.window-spec { display: flex; flex-direction: column; gap: 7px; }
+
+.window-spec-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  padding-bottom: 7px;
+  border-bottom: 1px solid var(--border-dim);
+}
+
+.window-spec-key { color: var(--text-dim); }
+.window-spec-val { color: var(--cream); font-family: 'Cormorant Garamond', serif; font-size: 20px; }
+
+/* ============================================================
+   GALLERY
+   ============================================================ */
+.gallery-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 10px;
+  height: 100%;
+}
+
+.gallery-item { position: relative; overflow: hidden; }
+.gallery-item.featured { grid-row: span 2; }
+
+.gallery-caption {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  padding: 16px 18px;
+  background: linear-gradient(transparent, rgba(8,27,27,0.92));
+  z-index: 3;
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--cream);
+}
+
+/* ============================================================
+   PROJECT GALLERY (slides 14 / 15)
+   ============================================================ */
+.proj-gallery-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 12px;
+  flex: 1;
+}
+
+.proj-gallery-grid .proj-item {
+  position: relative;
+  overflow: hidden;
+}
+
+.proj-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  flex: 1;
+}
+
+/* ============================================================
+   CONTACT SLIDE
+   ============================================================ */
+.contact-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--border-dim);
+}
+
+.contact-cell {
+  background: var(--bg-2);
+  padding: 34px 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.contact-label {
+  font-size: 12px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.contact-value {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 28px;
+  color: var(--cream);
+  font-weight: 400;
+}
+
+/* ============================================================
+   PILLARS ROW
+   ============================================================ */
+.pillars-row {
+  display: flex;
+  gap: 1px;
+  background: var(--border-dim);
+}
+
+.pillar {
+  flex: 1;
+  background: var(--bg-2);
+  padding: 18px;
+  text-align: center;
+}
+
+.pillar-name {
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+/* ============================================================
+   FEATURE ROW (wall panels etc.)
+   ============================================================ */
+.feature-row {
+  display: flex;
+  gap: 18px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border-dim);
+  align-items: flex-start;
+}
+
+.feature-dot {
+  width: 6px; height: 6px;
+  background: var(--gold);
+  border-radius: 50%;
+  margin-top: 9px;
+  flex-shrink: 0;
+}
+
+.feature-title {
+  font-size: 15px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--cream);
+  margin-bottom: 4px;
+}
+
+.feature-body {
+  font-size: 15px;
+  color: var(--text);
+  line-height: 1.55;
+}
+
+/* ============================================================
+   TRUST MARKER
+   ============================================================ */
+.trust-marker {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.tm-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 26px;
+  color: var(--gold);
+  font-weight: 600;
+  min-width: 68px;
+  line-height: 1.2;
+}
+
+.tm-label {
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  color: var(--text);
+  line-height: 1.5;
+}
+
+/* progress bar defined above in STAGE section */
+
+/* ============================================================
+   COVER
+   ============================================================ */
+#slide-01 {
+  flex-direction: column;
+  justify-content: space-between;
+  background:
+    radial-gradient(ellipse at 68% 28%, rgba(86,149,120,0.06) 0%, transparent 55%),
+    var(--bg);
+}
+
+.cover-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex: 1;
+}
+
+.cover-title {
+  font-size: 108px;
+  letter-spacing: -0.025em;
+  max-width: 700px;
+}
+
+.cover-tagline {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 22px;
+  font-style: italic;
+  color: var(--text);
+  letter-spacing: 0.06em;
+  margin-top: 18px;
+}
+
+.cover-stats { display: flex; gap: 48px; align-items: flex-end; }
+
+.cover-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding-top: 24px;
+  border-top: 1px solid var(--border-dim);
+}
+
+.cover-pillars { display: flex; gap: 32px; }
+
+.cover-pillar {
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+/* ============================================================
+   SCROLLBAR & SELECTION
+   ============================================================ */
+::selection { background: rgba(86,149,120,0.30); color: var(--cream); }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ========================================================
+       SIDEBAR NAVIGATION
+       ======================================================== -->
+  <aside id="sidebar">
+    <div class="sidebar-logo">
+      <span>WWL Homes</span>
+      <p>B2B Portfolio</p>
+    </div>
+    <nav id="chapter-nav"><!-- nav items injected by JS --></nav>
+    <div class="sidebar-footer">
+      wwlhomes.com<br>
+      Est. 1890 · Latvia
+    </div>
+  </aside>
+
+  <!-- ========================================================
+       VIEWPORT + FIXED 16:9 CANVAS
+       ======================================================== -->
+  <div id="viewport">
+    <div id="slide-stage">
+
+      <!-- Slide Counter -->
+      <div id="counter"><span id="cur">1</span> / <span id="tot">18</span></div>
+
+      <!-- Bottom nav arrows (inside canvas) -->
+      <button class="nav-arrow" id="prev-btn" title="Previous (←)">&#8592;</button>
+      <button class="nav-arrow" id="next-btn" title="Next (→)">&#8594;</button>
+
+      <!-- Side arrows (large, centered on canvas edges) -->
+      <button class="side-arrow" id="side-prev" title="Previous">&#8249;</button>
+      <button class="side-arrow" id="side-next" title="Next">&#8250;</button>
+
+      <!-- Progress Bar -->
+      <div id="progress-bar"><div id="progress-fill"></div></div>
+
+
+    <!-- ====================================================
+         SLIDE 01: COVER
+         ==================================================== -->
+    <!-- SLIDE 01: COVER -->
+    <section class="slide" id="slide-01" data-chapter="Overview">
+      <div style="display:flex;flex-direction:column;width:100%;height:100%;gap:0;">
+
+        <!-- TOP ZONE: Logo centered -->
+        <div style="display:flex;justify-content:center;align-items:center;padding-bottom:28px;border-bottom:1px solid var(--border-dim);">
+          <!-- IMAGE PLACEHOLDER: WWL Homes Logo -->
+          <!-- Replace images/wwl-logo.png with your actual logo file -->
+          <div class="img-placeholder" style="height:68px;width:220px;border-color:var(--gold-deep);background:transparent;">
+            <img src="images/wwl-logo.png" alt="WWL Homes Logo"
+                 onerror="this.style.display='none'"
+                 style="object-fit:contain;padding:10px;">
+            <div class="img-icon" style="font-size:26px;color:var(--gold);">◈</div>
+            <div class="img-label" style="font-size:12px;letter-spacing:0.18em;">images/wwl-logo.png</div>
+          </div>
+        </div>
+
+        <!-- MIDDLE ZONE: Headline left + Stats right — fills remaining space -->
+        <div style="flex:1;display:flex;align-items:center;justify-content:space-between;gap:40px;padding:32px 0;">
+
+          <!-- Headline -->
+          <div>
+            <span class="eyebrow">WWL Homes · Since 1997</span>
+            <h1 class="hero-title cover-title">Technology<br>Driven<br><em style="color:var(--gold);">Homes.</em></h1>
+            <p class="cover-tagline">Naturally Smarter.</p>
+          </div>
+
+          <!-- Stats -->
+          <div class="cover-stats">
+            <div class="stat-block">
+              <span class="stat-num large">700<span class="gold">+</span></span>
+              <span class="stat-label">Projects Built</span>
+            </div>
+            <div class="stat-block">
+              <span class="stat-num large">27</span>
+              <span class="stat-label">Years Experience</span>
+            </div>
+            <div class="stat-block">
+              <span class="stat-num large">10<span class="gold">+</span></span>
+              <span class="stat-label">Countries</span>
+            </div>
+            <div class="stat-block">
+              <span class="stat-num" style="font-size:56px;">12,000</span>
+              <span class="stat-label">m² Factory Floor</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- BOTTOM ZONE: Pillars bar -->
+        <div class="cover-bottom">
+          <div class="cover-pillars">
+            <span class="cover-pillar">Factory Precision</span>
+            <span class="cover-pillar" style="color:var(--border);">·</span>
+            <span class="cover-pillar">Energy Positive</span>
+            <span class="cover-pillar" style="color:var(--border);">·</span>
+            <span class="cover-pillar">Built to Last</span>
+            <span class="cover-pillar" style="color:var(--border);">·</span>
+            <span class="cover-pillar">Certified Quality</span>
+          </div>
+          <div style="font-size:13px;letter-spacing:0.15em;color:var(--text-dim);text-transform:uppercase;">
+            by Baltic Wood Factory · Est. 1890
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- ====================================================
+         SLIDE 02: WHO WE ARE
+         ==================================================== -->
+    <!-- SLIDE 02: WHO WE ARE -->
+    <section class="slide" id="slide-02" data-chapter="Company">
+      <!-- Left: text content -->
+      <div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding-right:44px;">
+        <span class="eyebrow">Company</span>
+        <h2 class="section-title">Who We Are</h2>
+        <div class="h-line"></div>
+
+        <p class="body-text" style="max-width:480px;margin-bottom:22px;">
+          Full-service real estate development and manufacturing company delivering high-quality timber frame homes, modular buildings, and wooden windows to B2B clients across Europe.
+        </p>
+
+        <div style="display:flex;gap:32px;margin-bottom:24px;">
+          <div class="stat-block">
+            <span class="stat-num">1997</span>
+            <span class="stat-label">Operating Since</span>
+          </div>
+          <div class="stat-block">
+            <span class="stat-num">1890</span>
+            <span class="stat-label">Factory Roots</span>
+          </div>
+          <div class="stat-block">
+            <span class="stat-num">±0.5<span style="font-size:30px;"> mm</span></span>
+            <span class="stat-label">CNC Precision</span>
+          </div>
+        </div>
+
+        <p class="body-text dim" style="max-width:460px;">
+          Scandinavian craftsmanship · Energy technology · FSC-certified materials · Certified to highest European standards
+        </p>
+
+        <!-- Compact trust badge row -->
+        <div style="display:flex;gap:8px;margin-top:22px;flex-wrap:wrap;">
+          <div style="border:1px solid var(--border);padding:8px 20px;font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--gold);">ISO 9001</div>
+          <div style="border:1px solid var(--border);padding:8px 20px;font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--gold);">AAA</div>
+          <div style="border:1px solid var(--border);padding:8px 20px;font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--gold);">FSC</div>
+          <div style="border:1px solid var(--border);padding:8px 20px;font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--gold);">TÜV</div>
+          <div style="border:1px solid var(--border);padding:8px 20px;font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--gold);">CE</div>
+        </div>
+      </div>
+
+      <!-- Right: large factory image — occupies ~45% slide width -->
+      <!-- IMAGE PLACEHOLDER: Factory Production Facility -->
+      <!-- Replace with images/factory.jpg -->
+      <div style="width:42%;display:flex;flex-direction:column;gap:0;">
+        <div class="img-placeholder" style="flex:1;">
+          <img src="images/factory.jpg" alt="Factory Production Facility"
+               onerror="this.style.display='none'"
+               style="object-fit:cover;object-position:center center;">
+          <div class="img-icon" style="font-size:36px;">◫</div>
+          <div class="img-path">images/factory.jpg</div>
+          <div class="img-label">Factory Production Facility · Kalnciems</div>
+        </div>
+        <div style="background:var(--bg-2);border:1px solid var(--border);border-top:none;padding:12px 16px;">
+          <p style="font-size:13px;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-dim);">12,000 m² · Kalnciems, Latvia · Est. 1890</p>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ====================================================
+         SLIDE 03: GLOBAL PRESENCE
+         ==================================================== -->
+    <!-- SLIDE 03: GLOBAL PRESENCE -->
+    <section class="slide" id="slide-03" data-chapter="Global Reach">
+      <div style="display:flex;flex-direction:column;gap:20px;width:100%;">
+        <div>
+          <span class="eyebrow">Delivery Network</span>
+          <h2 class="section-title">Global Presence</h2>
+          <div class="h-line"></div>
+        </div>
+
+        <div class="region-grid" style="flex:1;">
+
+          <!-- IMAGE PLACEHOLDER: Scandinavia Project -->
+          <!-- Replace with images/region-scandinavia.jpg -->
+          <div class="region-cell" style="padding:0;overflow:hidden;display:flex;flex-direction:column;">
+            <div style="padding:16px 20px 14px;">
+              <p class="region-name">Scandinavia</p>
+              <p class="region-countries">Norway · Sweden<br>Denmark · Finland</p>
+            </div>
+            <div class="img-placeholder" style="flex:1;border:none;border-top:1px solid var(--border-dim);">
+              <img src="images/region-scandinavia.jpg" alt="Scandinavia Project"
+                   onerror="this.style.display='none'"
+                   style="object-fit:cover;">
+              <div class="img-icon" style="font-size:32px;">◫</div>
+              <div class="img-label">images/region-scandinavia.jpg</div>
+            </div>
+          </div>
+
+          <!-- IMAGE PLACEHOLDER: Baltic Region Project -->
+          <!-- Replace with images/region-baltic.jpg -->
+          <div class="region-cell" style="padding:0;overflow:hidden;display:flex;flex-direction:column;">
+            <div style="padding:16px 20px 14px;">
+              <p class="region-name">Baltic Region</p>
+              <p class="region-countries">Latvia · Lithuania<br>Estonia</p>
+            </div>
+            <div class="img-placeholder" style="flex:1;border:none;border-top:1px solid var(--border-dim);">
+              <img src="images/region-baltic.jpg" alt="Baltic Region Project"
+                   onerror="this.style.display='none'"
+                   style="object-fit:cover;">
+              <div class="img-icon" style="font-size:32px;">◫</div>
+              <div class="img-label">images/region-baltic.jpg</div>
+            </div>
+          </div>
+
+          <!-- IMAGE PLACEHOLDER: Western Europe Project -->
+          <!-- Replace with images/region-western-europe.jpg -->
+          <div class="region-cell" style="padding:0;overflow:hidden;display:flex;flex-direction:column;">
+            <div style="padding:16px 20px 14px;">
+              <p class="region-name">Western Europe</p>
+              <p class="region-countries">UK · Netherlands<br>France · Germany</p>
+            </div>
+            <div class="img-placeholder" style="flex:1;border:none;border-top:1px solid var(--border-dim);">
+              <img src="images/region-western-europe.jpg" alt="Western Europe Project"
+                   onerror="this.style.display='none'"
+                   style="object-fit:cover;">
+              <div class="img-icon" style="font-size:32px;">◫</div>
+              <div class="img-label">images/region-western-europe.jpg</div>
+            </div>
+          </div>
+
+          <!-- IMAGE PLACEHOLDER: International Project -->
+          <!-- Replace with images/region-international.jpg -->
+          <div class="region-cell" style="padding:0;overflow:hidden;display:flex;flex-direction:column;">
+            <div style="padding:16px 20px 14px;">
+              <p class="region-name">Further Markets</p>
+              <p class="region-countries">Italy · Switzerland<br>Korea · Canada · New Zealand</p>
+            </div>
+            <div class="img-placeholder" style="flex:1;border:none;border-top:1px solid var(--border-dim);">
+              <img src="images/region-international.jpg" alt="International Project"
+                   onerror="this.style.display='none'"
+                   style="object-fit:cover;">
+              <div class="img-icon" style="font-size:32px;">◫</div>
+              <div class="img-label">images/region-international.jpg</div>
+            </div>
+          </div>
+
+        </div>
+
+        <div style="display:flex;align-items:center;gap:20px;padding-top:12px;border-top:1px solid var(--border-dim);">
+          <div style="display:flex;align-items:baseline;gap:10px;">
+            <span class="stat-num" style="font-size:66px;">10<span class="gold">+</span></span>
+            <span class="stat-label">Active<br>Countries</span>
+          </div>
+          <div style="width:1px;height:44px;background:var(--border-dim);"></div>
+          <p class="body-text dim">All delivered projects adapted to local building standards &amp; regulations</p>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ====================================================
+         SLIDE 04: HOW WE BUILD
+         ==================================================== -->
+    <!-- SLIDE 04: HOW WE BUILD — THREE TECHNOLOGIES -->
+    <section class="slide" id="slide-04" data-chapter="Technologies">
+      <div style="display:flex;flex-direction:column;gap:20px;width:100%;">
+        <div>
+          <span class="eyebrow">Technologies</span>
+          <h2 class="section-title">Three Technologies. One Vision.</h2>
+          <div class="h-line"></div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;flex:1;">
+
+          <div class="tech-card" style="padding:0;overflow:hidden;gap:0;">
+            <!-- IMAGE PLACEHOLDER: Wall Panel Technology -->
+            <!-- Replace with images/tech-wall-panels.jpg -->
+            <div class="img-placeholder" style="height:160px;border:none;border-bottom:1px solid var(--border-dim);">
+              <img src="images/tech-wall-panels.jpg" alt="Wall Panel Technology"
+                   onerror="this.style.display:'none'"
+                   style="object-fit:cover;">
+              <div class="img-icon" style="font-size:28px;">◫</div>
+              <div class="img-label">images/tech-wall-panels.jpg</div>
+            </div>
+            <div style="padding:20px 20px 22px;">
+              <span class="tech-num">01</span>
+              <span class="tech-title" style="display:block;margin:4px 0 8px;">Wall Panels</span>
+              <p style="font-size:17px;color:var(--text);line-height:1.65;">Pre-fabricated structural panels assembled on-site. Consistent factory quality, faster construction, sustainable materials.</p>
+              <p style="font-size:13px;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);margin-top:14px;">Single-family · Low-rise Residential</p>
+            </div>
+          </div>
+
+          <div class="tech-card" style="padding:0;overflow:hidden;gap:0;">
+            <!-- IMAGE PLACEHOLDER: Modular Building Project -->
+            <!-- Replace with images/tech-modular.jpg -->
+            <div class="img-placeholder" style="height:160px;border:none;border-bottom:1px solid var(--border-dim);">
+              <img src="images/tech-modular.jpg" alt="Modular Building Project"
+                   onerror="this.style.display:'none'"
+                   style="object-fit:cover;">
+              <div class="img-icon" style="font-size:28px;">◫</div>
+              <div class="img-label">images/tech-modular.jpg</div>
+            </div>
+            <div style="padding:20px 20px 22px;">
+              <span class="tech-num">02</span>
+              <span class="tech-title" style="display:block;margin:4px 0 8px;">Modular Construction</span>
+              <p style="font-size:17px;color:var(--text);line-height:1.65;">Factory-built 3D modules delivered and assembled on-site. Minimal on-site time, high precision, turnkey delivery.</p>
+              <p style="font-size:13px;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);margin-top:14px;">Multi-unit · Repetitive Projects</p>
+            </div>
+          </div>
+
+          <div class="tech-card" style="padding:0;overflow:hidden;gap:0;">
+            <!-- IMAGE PLACEHOLDER: VST Construction System -->
+            <!-- Replace with images/tech-vst.jpg -->
+            <div class="img-placeholder" style="height:160px;border:none;border-bottom:1px solid var(--border-dim);">
+              <img src="images/tech-vst.jpg" alt="VST Construction System"
+                   onerror="this.style.display:'none'"
+                   style="object-fit:cover;">
+              <div class="img-icon" style="font-size:28px;">◫</div>
+              <div class="img-label">images/tech-vst.jpg</div>
+            </div>
+            <div style="padding:20px 20px 22px;">
+              <span class="tech-num">03</span>
+              <span class="tech-title" style="display:block;margin:4px 0 8px;">VST + Infill Walls</span>
+              <p style="font-size:17px;color:var(--text);line-height:1.65;">Hybrid system: reinforced concrete core (VST) combined with timber infill walls. Strong structure, flexible layout.</p>
+              <p style="font-size:13px;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);margin-top:14px;">Multi-story Buildings</p>
+            </div>
+          </div>
+
+        </div>
+
+        <div style="display:flex;gap:10px;">
+          <div style="font-size:14px;letter-spacing:0.14em;text-transform:uppercase;color:var(--text);padding:10px 22px;border:1px solid var(--border-dim);">Fire Resistant</div>
+          <div style="font-size:14px;letter-spacing:0.14em;text-transform:uppercase;color:var(--text);padding:10px 22px;border:1px solid var(--border-dim);">Sound Absorbent</div>
+          <div style="font-size:14px;letter-spacing:0.14em;text-transform:uppercase;color:var(--text);padding:10px 22px;border:1px solid var(--border-dim);">Energy Efficient</div>
+          <div style="font-size:14px;letter-spacing:0.14em;text-transform:uppercase;color:var(--text);padding:10px 22px;border:1px solid var(--border-dim);">Factory Controlled</div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ====================================================
+         SLIDE 05: WALL PANELS
+         ==================================================== -->
+    <!-- SLIDE 05: WALL PANELS -->
+    <section class="slide" id="slide-05" data-chapter="Technologies">
+      <!-- Left: features -->
+      <div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding-right:40px;">
+        <span class="eyebrow">Technology 01</span>
+        <h2 class="section-title">Pre-Fabricated<br>Wall Panels</h2>
+        <div class="h-line"></div>
+
+        <div class="feature-row">
+          <div class="feature-dot"></div>
+          <div>
+            <p class="feature-title">Quick Shell Installation</p>
+            <p class="feature-body">Factory-built panels shipped and erected in days, not weeks.</p>
+          </div>
+        </div>
+        <div class="feature-row">
+          <div class="feature-dot"></div>
+          <div>
+            <p class="feature-title">Consistent Quality</p>
+            <p class="feature-body">CNC precision to 0.5 mm — every panel identical, every time.</p>
+          </div>
+        </div>
+        <div class="feature-row">
+          <div class="feature-dot"></div>
+          <div>
+            <p class="feature-title">Superior Insulation</p>
+            <p class="feature-body">Standard exterior wall U-value: 0.16 W/m²K — exceeds EU norms.</p>
+          </div>
+        </div>
+        <div class="feature-row">
+          <div class="feature-dot"></div>
+          <div>
+            <p class="feature-title">Shorter Build Times</p>
+            <p class="feature-body">Reduce overall construction schedule by 30–40% vs traditional.</p>
+          </div>
+        </div>
+        <div class="feature-row" style="border:none;">
+          <div class="feature-dot"></div>
+          <div>
+            <p class="feature-title">Flexible Finishes</p>
+            <p class="feature-body">Timber cladding, metal, render — any exterior finish possible.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: image + specs -->
+      <div style="width:300px;display:flex;flex-direction:column;gap:10px;">
+        <!-- IMAGE PLACEHOLDER: wall panels factory production -->
+        <div class="img-placeholder" style="height:190px;">
+          <img src="images/wall-panels.jpg" alt="Wall Panels" onerror="this.style.display='none'">
+          <div class="img-icon">◫</div>
+          <div class="img-path">images/wall-panels.jpg</div>
+          <div class="img-label">Wall Panel Production</div>
+        </div>
+
+        <span class="label" style="display:block;margin:4px 0 2px;">Key Specifications</span>
+        <div class="spec-row">
+          <span class="spec-key">Exterior Wall</span>
+          <span class="spec-val cream">U 0.16 W/m²K</span>
+        </div>
+        <div class="spec-row">
+          <span class="spec-key">Roof Insulation</span>
+          <span class="spec-val cream">U 0.13 W/m²K</span>
+        </div>
+        <div class="spec-row">
+          <span class="spec-key">Fire Rating</span>
+          <span class="spec-val cream">E160 / EW60</span>
+        </div>
+        <div class="spec-row">
+          <span class="spec-key">Precision</span>
+          <span class="spec-val cream">CNC ±0.5 mm</span>
+        </div>
+        <div class="spec-row" style="border:none;">
+          <span class="spec-key">Production Cap.</span>
+          <span class="spec-val cream">500 homes/yr</span>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ====================================================
+         SLIDE 06: MODULAR CONSTRUCTION
+         ==================================================== -->
+    <!-- SLIDE 06: MODULAR CONSTRUCTION -->
+    <section class="slide" id="slide-06" data-chapter="Technologies">
+      <div style="display:flex;flex-direction:column;gap:18px;width:100%;">
+        <div>
+          <span class="eyebrow">Technology 02</span>
+          <h2 class="section-title">Modular Construction</h2>
+          <div class="h-line"></div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;flex:1;">
+          <div style="background:var(--bg-2);border:1px solid var(--border);padding:20px 16px;display:flex;flex-direction:column;gap:10px;">
+            <!-- IMAGE PLACEHOLDER: residential apartments modular -->
+            <div class="img-placeholder" style="height:100px;">
+              <img src="images/modular-residential.jpg" alt="" onerror="this.style.display='none'">
+              <div class="img-icon" style="font-size:22px;">⬡</div>
+              <div class="img-label">images/modular-residential.jpg</div>
+            </div>
+            <span style="font-family:'Cormorant Garamond',serif;font-size:26px;color:var(--cream);">Residential<br>Apartments</span>
+            <p style="font-size:12px;color:var(--text);line-height:1.6;">Multi-family housing, student accommodation, social housing</p>
+          </div>
+          <div style="background:var(--bg-2);border:1px solid var(--border);padding:20px 16px;display:flex;flex-direction:column;gap:10px;">
+            <!-- IMAGE PLACEHOLDER: hotels hospitality modular -->
+            <div class="img-placeholder" style="height:100px;">
+              <img src="images/modular-hotel.jpg" alt="" onerror="this.style.display='none'">
+              <div class="img-icon" style="font-size:22px;">⬡</div>
+              <div class="img-label">images/modular-hotel.jpg</div>
+            </div>
+            <span style="font-family:'Cormorant Garamond',serif;font-size:26px;color:var(--cream);">Hotels &amp;<br>Hospitality</span>
+            <p style="font-size:12px;color:var(--text);line-height:1.6;">Modular hotel rooms &amp; suites — fast build, consistent quality</p>
+          </div>
+          <div style="background:var(--bg-2);border:1px solid var(--border);padding:20px 16px;display:flex;flex-direction:column;gap:10px;">
+            <!-- IMAGE PLACEHOLDER: commercial offices modular -->
+            <div class="img-placeholder" style="height:100px;">
+              <img src="images/modular-office.jpg" alt="" onerror="this.style.display='none'">
+              <div class="img-icon" style="font-size:22px;">⬡</div>
+              <div class="img-label">images/modular-office.jpg</div>
+            </div>
+            <span style="font-family:'Cormorant Garamond',serif;font-size:26px;color:var(--cream);">Commercial<br>Offices</span>
+            <p style="font-size:12px;color:var(--text);line-height:1.6;">Timber multi-story office &amp; retail spaces with VST hybrid core</p>
+          </div>
+          <div style="background:var(--bg-2);border:1px solid var(--border);padding:20px 16px;display:flex;flex-direction:column;gap:10px;">
+            <!-- IMAGE PLACEHOLDER: social affordable modular -->
+            <div class="img-placeholder" style="height:100px;">
+              <img src="images/modular-social.jpg" alt="" onerror="this.style.display='none'">
+              <div class="img-icon" style="font-size:22px;">⬡</div>
+              <div class="img-label">images/modular-social.jpg</div>
+            </div>
+            <span style="font-family:'Cormorant Garamond',serif;font-size:26px;color:var(--cream);">Social &amp;<br>Affordable</span>
+            <p style="font-size:12px;color:var(--text);line-height:1.6;">Scalable, certified, cost-efficient — FSC timber, EU-certified</p>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;padding-top:12px;border-top:1px solid var(--border-dim);">
+          <div style="display:flex;align-items:baseline;gap:10px;">
+            <span class="stat-num" style="font-size:56px;">500</span>
+            <span class="stat-label">Modular units<br>per year capacity</span>
+          </div>
+          <span style="font-size:14px;letter-spacing:0.16em;text-transform:uppercase;color:var(--gold);border:1px solid var(--border);padding:12px 24px;">Turnkey Delivery Available</span>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ====================================================
+         SLIDE 07: VST + INFILL WALLS
+         ==================================================== -->
+    <!-- SLIDE 07: VST + INFILL WALL SYSTEM -->
+    <section class="slide" id="slide-07" data-chapter="Technologies">
+      <!-- Left: features -->
+      <div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding-right:40px;">
+        <span class="eyebrow">Technology 03</span>
+        <h2 class="section-title">VST + Infill<br>Wall System</h2>
+        <div class="h-line"></div>
+
+        <div class="feature-row">
+          <div class="feature-dot"></div>
+          <div>
+            <p class="feature-title">Reduced Foundation Load</p>
+            <p class="feature-body">Timber infill is significantly lighter than full concrete — lower foundation costs.</p>
+          </div>
+        </div>
+        <div class="feature-row">
+          <div class="feature-dot"></div>
+          <div>
+            <p class="feature-title">Faster Construction</p>
+            <p class="feature-body">Prefab infill panels mount directly to the VST frame — days not weeks.</p>
+          </div>
+        </div>
+        <div class="feature-row">
+          <div class="feature-dot"></div>
+          <div>
+            <p class="feature-title">Design Flexibility</p>
+            <p class="feature-body">Floor plans change freely between floors — no load-bearing timber walls.</p>
+          </div>
+        </div>
+        <div class="feature-row" style="border:none;">
+          <div class="feature-dot"></div>
+          <div>
+            <p class="feature-title">Fire &amp; Sound Certified</p>
+            <p class="feature-body">E160/EI60 fire resistance + Rw 45–52 dB sound insulation tested.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: image + stat -->
+      <div style="width:320px;display:flex;flex-direction:column;gap:12px;">
+        <!-- IMAGE PLACEHOLDER: VST multi-story building system -->
+        <div class="img-placeholder" style="flex:1;">
+          <img src="images/vst-system.jpg" alt="VST System" onerror="this.style.display='none'">
+          <div class="img-icon">◻</div>
+          <div class="img-path">images/vst-system.jpg</div>
+          <div class="img-label">VST Multi-Story System</div>
+        </div>
+
+        <div style="background:var(--bg-2);border:1px solid var(--border);padding:22px 20px;text-align:center;">
+          <span class="stat-num large cream">37</span>
+          <span class="stat-label" style="display:block;margin-top:6px;">Buildings Delivered</span>
+          <p style="font-size:15px;color:var(--text);margin-top:10px;line-height:1.55;">Norway · Sweden · UK · Baltic Markets</p>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ====================================================
+         SLIDE 08: ENERGY TECHNOLOGY
+         ==================================================== -->
+    <!-- SLIDE 08: ENERGY TECHNOLOGY — PLUS ENERGY HOMES -->
+    <section class="slide" id="slide-08" data-chapter="Energy">
+
+      <!-- Left col: dominant featured image -->
+      <!-- IMAGE PLACEHOLDER: Mārupe Plus Energy Home -->
+      <!-- Replace with images/marupe-plus-energy-house.jpg -->
+      <div style="width:46%;display:flex;flex-direction:column;gap:0;margin-right:44px;">
+        <div class="img-placeholder" style="flex:1;">
+          <img src="images/marupe-plus-energy-house.jpg" alt="Mārupe Plus Energy Home"
+               onerror="this.style.display='none'"
+               style="object-fit:cover;object-position:center center;">
+          <div class="img-icon" style="font-size:40px;">◫</div>
+          <div class="img-path">images/marupe-plus-energy-house.jpg</div>
+          <div class="img-label">Mārupe Plus Energy Home · Flagship Project</div>
+        </div>
+        <div style="background:var(--bg-2);border:1px solid var(--border);border-top:none;padding:12px 16px;">
+          <p style="font-size:13px;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-dim);">Mežvēji Village · Mārupe · Latvia</p>
+        </div>
+      </div>
+
+      <!-- Right col: stats + systems -->
+      <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:20px;">
+        <div>
+          <span class="eyebrow">Energy Technology</span>
+          <h2 class="section-title">Plus Energy<br>Homes</h2>
+          <div class="h-line"></div>
+        </div>
+
+        <div style="display:flex;gap:28px;">
+          <div class="stat-block">
+            <span class="stat-num large">11 <span style="font-size:40px;color:var(--text-dim);">MW</span></span>
+            <span class="stat-label">Generated per year</span>
+          </div>
+          <div style="width:1px;background:var(--border-dim);"></div>
+          <div class="stat-block">
+            <span class="stat-num large">4–5 <span style="font-size:40px;color:var(--text-dim);">MW</span></span>
+            <span class="stat-label">Consumed · surplus sold</span>
+          </div>
+        </div>
+
+        <div style="background:var(--bg-2);border:1px solid var(--border);border-left:3px solid var(--gold);padding:14px 18px;">
+          <p style="font-family:'Cormorant Garamond',serif;font-size:24px;font-style:italic;color:var(--cream);">The house produces more energy than it consumes.</p>
+        </div>
+
+        <div class="energy-grid">
+          <div class="energy-item">
+            <span class="energy-num-badge">1</span>
+            <div><p class="energy-item-title">Heat Pump</p><p class="energy-item-body">Year-round heating &amp; cooling, zero combustion</p></div>
+          </div>
+          <div class="energy-item">
+            <span class="energy-num-badge">2</span>
+            <div><p class="energy-item-title">Heat Recuperator</p><p class="energy-item-body">Fresh air supply with zero heat loss</p></div>
+          </div>
+          <div class="energy-item">
+            <span class="energy-num-badge">3</span>
+            <div><p class="energy-item-title">Integrated Solar</p><p class="energy-item-body">Discreet, roof-integrated solar panels</p></div>
+          </div>
+          <div class="energy-item">
+            <span class="energy-num-badge">4</span>
+            <div><p class="energy-item-title">Smart Home</p><p class="energy-item-body">Remote control, sensors, video intercom</p></div>
+          </div>
+          <div class="energy-item">
+            <span class="energy-num-badge">5</span>
+            <div><p class="energy-item-title">Warm Floors &amp; Walls</p><p class="energy-item-body">Ecological, allergy-free radiant materials</p></div>
+          </div>
+          <div class="energy-item">
+            <span class="energy-num-badge">6</span>
+            <div><p class="energy-item-title">Auto Systems</p><p class="energy-item-body">Irrigation, anti-ice drainage, smart gate</p></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ====================================================
+         SLIDE 09: WOODEN WINDOWS
+         ==================================================== -->
+    <!-- SLIDE 09: WOODEN WINDOWS PRODUCT LINE -->
+    <section class="slide" id="slide-09" data-chapter="Products">
+      <div style="display:flex;flex-direction:column;gap:20px;width:100%;">
+        <div>
+          <span class="eyebrow">Product Line</span>
+          <h2 class="section-title">Energy-Efficient Wooden Windows</h2>
+          <div class="h-line"></div>
+        </div>
+
+        <div class="window-cards" style="flex:1;">
+          <div class="window-card">
+            <!-- IMAGE PLACEHOLDER: outward passive window product -->
+            <div class="img-placeholder" style="height:130px;">
+              <img src="images/windows-passive.jpg" alt="" onerror="this.style.display='none'">
+              <div class="img-icon">▭</div>
+              <div class="img-label">images/windows-passive.jpg</div>
+            </div>
+            <span class="window-name">Outward Passive</span>
+            <div class="window-spec">
+              <div class="window-spec-row">
+                <span class="window-spec-key">U-value</span>
+                <span class="window-spec-val">0.75 W/m²K</span>
+              </div>
+              <div class="window-spec-row">
+                <span class="window-spec-key">Sound</span>
+                <span class="window-spec-val">Rw 33–48 dB</span>
+              </div>
+            </div>
+            <p style="font-size:16px;color:var(--text);line-height:1.55;">Passive-standard outward-opening window. Triple glazing, maximum thermal performance.</p>
+          </div>
+
+          <div class="window-card">
+            <!-- IMAGE PLACEHOLDER: WWL ECO 92 window product -->
+            <div class="img-placeholder" style="height:130px;">
+              <img src="images/windows-eco92.jpg" alt="" onerror="this.style.display='none'">
+              <div class="img-icon">▭</div>
+              <div class="img-label">images/windows-eco92.jpg</div>
+            </div>
+            <span class="window-name">WWL ECO 92</span>
+            <div class="window-spec">
+              <div class="window-spec-row">
+                <span class="window-spec-key">U-value</span>
+                <span class="window-spec-val">0.78 W/m²K</span>
+              </div>
+              <div class="window-spec-row">
+                <span class="window-spec-key">Sound</span>
+                <span class="window-spec-val">Rw 33–48 dB</span>
+              </div>
+            </div>
+            <p style="font-size:16px;color:var(--text);line-height:1.55;">Inward-opening 92 mm profile. Double seal, aluminium cladding option, custom RAL colour.</p>
+          </div>
+
+          <div class="window-card">
+            <!-- IMAGE PLACEHOLDER: sliding doors product -->
+            <div class="img-placeholder" style="height:130px;">
+              <img src="images/windows-sliding.jpg" alt="" onerror="this.style.display='none'">
+              <div class="img-icon">▭</div>
+              <div class="img-label">images/windows-sliding.jpg</div>
+            </div>
+            <span class="window-name">Sliding Doors</span>
+            <div class="window-spec">
+              <div class="window-spec-row">
+                <span class="window-spec-key">Thermal Bridge</span>
+                <span class="window-spec-val">Free</span>
+              </div>
+              <div class="window-spec-row">
+                <span class="window-spec-key">Sound</span>
+                <span class="window-spec-val">Rw 36–44 dB</span>
+              </div>
+            </div>
+            <p style="font-size:16px;color:var(--text);line-height:1.55;">Large format sliding glass doors. Triple-sealed, custom sizes, left/right opening.</p>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:18px;padding-top:12px;border-top:1px solid var(--border-dim);">
+          <span style="font-size:14px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text);">Manufactured In-House</span>
+          <span style="color:var(--border);">·</span>
+          <span style="font-size:14px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text);">CNC Precision</span>
+          <span style="color:var(--border);">·</span>
+          <span style="font-size:14px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text);">Custom RAL Colours</span>
+          <span style="color:var(--border);">·</span>
+          <span style="font-size:14px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text);">CE Certified</span>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ====================================================
+         SLIDE 10: SUSTAINABILITY
+         ==================================================== -->
+    <!-- SLIDE 10: SUSTAINABILITY — LATVIA TIMBER NATION -->
+    <section class="slide" id="slide-10" data-chapter="Sustainability">
+      <!-- Left: stats and facts -->
+      <div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding-right:44px;">
+        <span class="eyebrow">Sustainability</span>
+        <h2 class="section-title">Latvia:<br>A Timber Nation</h2>
+        <div class="h-line"></div>
+
+        <div style="display:flex;flex-direction:column;gap:0;">
+          <div style="display:flex;gap:14px;padding:14px 0;border-bottom:1px solid var(--border-dim);">
+            <span style="font-family:'Cormorant Garamond',serif;font-size:50px;color:var(--cream);line-height:1;min-width:80px;">55%</span>
+            <div>
+              <p style="font-size:17px;color:var(--cream);margin-bottom:4px;font-weight:500;">Forest Territory</p>
+              <p style="font-size:16px;color:var(--text);line-height:1.55;">Latvia's land mass covered by certified forest</p>
+            </div>
+          </div>
+          <div style="display:flex;gap:14px;padding:14px 0;border-bottom:1px solid var(--border-dim);">
+            <span style="font-family:'Cormorant Garamond',serif;font-size:50px;color:var(--cream);line-height:1;min-width:80px;">48%</span>
+            <div>
+              <p style="font-size:17px;color:var(--cream);margin-bottom:4px;font-weight:500;">Northern Pine</p>
+              <p style="font-size:16px;color:var(--text);line-height:1.55;">Premium structural timber, naturally resilient</p>
+            </div>
+          </div>
+          <div style="display:flex;gap:14px;padding:14px 0;border-bottom:1px solid var(--border-dim);">
+            <span style="font-family:'Cormorant Garamond',serif;font-size:44px;color:var(--cream);line-height:1.1;min-width:80px;">300<span class="gold">+</span></span>
+            <div>
+              <p style="font-size:17px;color:var(--cream);margin-bottom:4px;font-weight:500;">Years Durability</p>
+              <p style="font-size:16px;color:var(--text);line-height:1.55;">Latvian timber frame buildings stand for centuries</p>
+            </div>
+          </div>
+        </div>
+
+        <p style="font-size:16px;color:var(--text);line-height:1.65;padding-top:14px;">
+          Tree planting exceeds annual cutting — truly renewable. UNESCO recognises Latvian timber architecture as global cultural heritage.
+        </p>
+      </div>
+
+      <!-- Right: image + RTU -->
+      <div style="width:340px;display:flex;flex-direction:column;gap:10px;">
+        <!-- IMAGE PLACEHOLDER: Latvia forest timber landscape -->
+        <div class="img-placeholder" style="flex:1;">
+          <img src="images/latvia-forest.jpg" alt="" onerror="this.style.display='none'">
+          <div class="img-icon" style="font-size:30px;">♧</div>
+          <div class="img-path">images/latvia-forest.jpg</div>
+          <div class="img-label">Latvia Timber Nation</div>
+        </div>
+
+        <div style="background:var(--bg-2);border:1px solid var(--border);padding:16px 18px;">
+          <span class="label" style="display:block;margin-bottom:6px;">RTU Partnership</span>
+          <p style="font-size:16px;color:var(--text);line-height:1.6;">Riga Technical University — ongoing research collaboration in eco-innovation and building science.</p>
+        </div>
+
+        <div style="background:var(--bg-2);border:1px solid var(--border);padding:12px 18px;text-align:center;">
+          <span style="font-family:'Cormorant Garamond',serif;font-size:20px;font-style:italic;color:var(--gold);">FSC Certified Supply Chain</span>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ====================================================
+         SLIDE 11: OUR PROCESS
+         ==================================================== -->
+    <!-- SLIDE 11: OUR PROCESS — FROM BRIEF TO BUILT -->
+    <section class="slide" id="slide-11" data-chapter="Process">
+      <div style="display:flex;flex-direction:column;gap:24px;width:100%;">
+        <div>
+          <span class="eyebrow">From Brief to Built</span>
+          <h2 class="section-title">Our Process</h2>
+          <div class="h-line"></div>
+          <p class="body-text dim">Fully managed end-to-end delivery</p>
+        </div>
+
+        <div class="process-track" style="flex:1;">
+
+          <!-- Step 01: Engineering & Planning icon -->
+          <div class="process-step">
+            <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;opacity:0.75;">
+              <!-- Engineering / blueprint icon -->
+              <rect x="5" y="5" width="30" height="30" rx="1" stroke="#569578" stroke-width="1.2" fill="none"/>
+              <line x1="5" y1="13" x2="35" y2="13" stroke="#569578" stroke-width="1"/>
+              <line x1="13" y1="5" x2="13" y2="35" stroke="#569578" stroke-width="1"/>
+              <line x1="18" y1="19" x2="30" y2="19" stroke="#569578" stroke-width="1"/>
+              <line x1="18" y1="23" x2="28" y2="23" stroke="#569578" stroke-width="1"/>
+              <line x1="18" y1="27" x2="26" y2="27" stroke="#569578" stroke-width="1"/>
+              <circle cx="9" cy="9" r="1.5" fill="#569578"/>
+            </svg>
+            <span class="step-time">4–8 <small style="font-size:20px;color:var(--text-dim);">weeks</small></span>
+            <span style="font-size:13px;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);">Step 01</span>
+            <span class="step-title">Engineering Plan</span>
+            <p class="step-body">Design sketch, BIM 3D/4D/5D modelling, structural analysis, energy &amp; sound calculations, full construction drawings.</p>
+          </div>
+
+          <!-- Step 02: Material Procurement icon -->
+          <div class="process-step">
+            <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;opacity:0.75;">
+              <!-- Timber / materials icon -->
+              <rect x="6" y="16" width="28" height="6" rx="1" stroke="#569578" stroke-width="1.2" fill="none"/>
+              <rect x="6" y="25" width="28" height="6" rx="1" stroke="#569578" stroke-width="1.2" fill="none"/>
+              <rect x="6" y="7" width="28" height="6" rx="1" stroke="#569578" stroke-width="1.2" fill="none"/>
+              <line x1="14" y1="7" x2="14" y2="13" stroke="#569578" stroke-width="0.8"/>
+              <line x1="22" y1="7" x2="22" y2="13" stroke="#569578" stroke-width="0.8"/>
+              <line x1="14" y1="16" x2="14" y2="22" stroke="#569578" stroke-width="0.8"/>
+              <line x1="22" y1="16" x2="22" y2="22" stroke="#569578" stroke-width="0.8"/>
+            </svg>
+            <span class="step-time">2–4 <small style="font-size:20px;color:var(--text-dim);">weeks</small></span>
+            <span style="font-size:13px;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);">Step 02</span>
+            <span class="step-title">Material Ordering</span>
+            <p class="step-body">Certified materials sourced and ordered. FSC timber, ISO-certified insulation, CE-marked components.</p>
+          </div>
+
+          <!-- Step 03: Factory Production icon -->
+          <div class="process-step">
+            <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;opacity:0.75;">
+              <!-- Factory / CNC icon -->
+              <rect x="5" y="22" width="30" height="13" rx="1" stroke="#569578" stroke-width="1.2" fill="none"/>
+              <polyline points="5,22 5,14 12,14 12,22" stroke="#569578" stroke-width="1.2" fill="none"/>
+              <polyline points="16,22 16,10 24,10 24,22" stroke="#569578" stroke-width="1.2" fill="none"/>
+              <polyline points="28,22 28,16 35,16 35,22" stroke="#569578" stroke-width="1.2" fill="none"/>
+              <line x1="5" y1="29" x2="35" y2="29" stroke="#569578" stroke-width="0.8"/>
+              <circle cx="11" cy="32" r="2" stroke="#569578" stroke-width="1" fill="none"/>
+              <circle cx="29" cy="32" r="2" stroke="#569578" stroke-width="1" fill="none"/>
+            </svg>
+            <span class="step-time">1–2 <small style="font-size:20px;color:var(--text-dim);">weeks</small></span>
+            <span style="font-size:13px;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);">Step 03</span>
+            <span class="step-title">Panel Manufacturing</span>
+            <p class="step-body">CNC production in our Kalnciems factory. Quality-controlled assembly, rain-resistant packaging.</p>
+          </div>
+
+          <!-- Step 04: Delivery & Assembly icon -->
+          <div class="process-step">
+            <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;opacity:0.75;">
+              <!-- Delivery / house assembly icon -->
+              <polyline points="20,6 35,18 35,34 5,34 5,18 20,6" stroke="#569578" stroke-width="1.2" fill="none" stroke-linejoin="round"/>
+              <polyline points="5,18 20,6 35,18" stroke="#569578" stroke-width="1.2" fill="none"/>
+              <rect x="14" y="24" width="12" height="10" stroke="#569578" stroke-width="1" fill="none"/>
+              <line x1="20" y1="24" x2="20" y2="34" stroke="#569578" stroke-width="0.8"/>
+              <line x1="14" y1="29" x2="26" y2="29" stroke="#569578" stroke-width="0.8"/>
+            </svg>
+            <span class="step-time" style="font-size:28px;color:var(--cream);">On-site</span>
+            <span style="font-size:13px;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);">Step 04</span>
+            <span class="step-title">Delivery &amp; Assembly</span>
+            <p class="step-body">BIM-planned truck loading, transport to site, supervised on-site assembly with full warranty bond.</p>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ====================================================
+         SLIDE 12: CERTIFICATIONS
+         ==================================================== -->
+    <!-- SLIDE 12: TRUST & CERTIFICATIONS -->
+    <section class="slide" id="slide-12" data-chapter="Trust">
+      <div style="display:flex;flex-direction:column;gap:20px;width:100%;">
+        <div>
+          <span class="eyebrow">Awards &amp; Certifications</span>
+          <h2 class="section-title">Trust &amp; Quality</h2>
+          <div class="h-line"></div>
+        </div>
+
+        <div class="cert-grid" style="flex:1;">
+
+          <div class="cert-badge" style="padding:0;overflow:hidden;display:flex;flex-direction:column;">
+            <!-- IMAGE PLACEHOLDER: ISO Certificate -->
+            <!-- Replace with images/cert-iso9001.jpg -->
+            <div class="img-placeholder" style="height:80px;border:none;border-bottom:1px solid var(--border-dim);">
+              <img src="images/cert-iso9001.jpg" alt="ISO 9001 Certificate"
+                   onerror="this.style.display:'none'" style="object-fit:contain;padding:8px;">
+              <div class="img-icon" style="font-size:26px;">✦</div>
+              <div class="img-label" style="font-size:11px;">images/cert-iso9001.jpg</div>
+            </div>
+            <div style="padding:14px 14px 16px;">
+              <span class="cert-name">ISO 9001</span>
+              <span class="cert-title">Quality Management</span>
+              <span class="cert-desc">Production processes certified by Bureau Veritas</span>
+            </div>
+          </div>
+
+          <div class="cert-badge" style="padding:0;overflow:hidden;display:flex;flex-direction:column;">
+            <!-- IMAGE PLACEHOLDER: TÜV Certification -->
+            <!-- Replace with images/cert-tuv.jpg -->
+            <div class="img-placeholder" style="height:80px;border:none;border-bottom:1px solid var(--border-dim);">
+              <img src="images/cert-tuv.jpg" alt="TÜV Certification"
+                   onerror="this.style.display:'none'" style="object-fit:contain;padding:8px;">
+              <div class="img-icon" style="font-size:26px;">✦</div>
+              <div class="img-label" style="font-size:11px;">images/cert-tuv.jpg</div>
+            </div>
+            <div style="padding:14px 14px 16px;">
+              <span class="cert-name">TÜV</span>
+              <span class="cert-title">Fire Resistance</span>
+              <span class="cert-desc">E160/EI60-ef/EW60/E60 — EN13501-1</span>
+            </div>
+          </div>
+
+          <div class="cert-badge" style="padding:0;overflow:hidden;display:flex;flex-direction:column;">
+            <!-- IMAGE PLACEHOLDER: CE Marking -->
+            <!-- Replace with images/cert-ce.jpg -->
+            <div class="img-placeholder" style="height:80px;border:none;border-bottom:1px solid var(--border-dim);">
+              <img src="images/cert-ce.jpg" alt="CE Marking"
+                   onerror="this.style.display:'none'" style="object-fit:contain;padding:8px;">
+              <div class="img-icon" style="font-size:26px;">✦</div>
+              <div class="img-label" style="font-size:11px;">images/cert-ce.jpg</div>
+            </div>
+            <div style="padding:14px 14px 16px;">
+              <span class="cert-name">CE</span>
+              <span class="cert-title">EU Conformity</span>
+              <span class="cert-desc">Accepted across all European construction markets</span>
+            </div>
+          </div>
+
+          <div class="cert-badge" style="padding:0;overflow:hidden;display:flex;flex-direction:column;">
+            <!-- IMAGE PLACEHOLDER: FSC Certification -->
+            <!-- Replace with images/cert-fsc.jpg -->
+            <div class="img-placeholder" style="height:80px;border:none;border-bottom:1px solid var(--border-dim);">
+              <img src="images/cert-fsc.jpg" alt="FSC Certification"
+                   onerror="this.style.display:'none'" style="object-fit:contain;padding:8px;">
+              <div class="img-icon" style="font-size:26px;">✦</div>
+              <div class="img-label" style="font-size:11px;">images/cert-fsc.jpg</div>
+            </div>
+            <div style="padding:14px 14px 16px;">
+              <span class="cert-name">FSC</span>
+              <span class="cert-title">Sustainable Timber</span>
+              <span class="cert-desc">Forest Stewardship Council certified supply chain</span>
+            </div>
+          </div>
+
+          <div class="cert-badge" style="padding:0;overflow:hidden;display:flex;flex-direction:column;">
+            <!-- IMAGE PLACEHOLDER: AAA Credit Rating -->
+            <!-- Replace with images/cert-aaa.jpg -->
+            <div class="img-placeholder" style="height:80px;border:none;border-bottom:1px solid var(--border-dim);">
+              <img src="images/cert-aaa.jpg" alt="AAA Credit Rating"
+                   onerror="this.style.display:'none'" style="object-fit:contain;padding:8px;">
+              <div class="img-icon" style="font-size:26px;">✦</div>
+              <div class="img-label" style="font-size:11px;">images/cert-aaa.jpg</div>
+            </div>
+            <div style="padding:14px 14px 16px;">
+              <span class="cert-name">AAA</span>
+              <span class="cert-title">Creditworthiness</span>
+              <span class="cert-desc">Highest rating — bank guarantees available</span>
+            </div>
+          </div>
+
+          <div class="cert-badge" style="padding:0;overflow:hidden;display:flex;flex-direction:column;">
+            <!-- IMAGE PLACEHOLDER: LIAA Export Award -->
+            <!-- Replace with images/cert-liaa.jpg -->
+            <div class="img-placeholder" style="height:80px;border:none;border-bottom:1px solid var(--border-dim);">
+              <img src="images/cert-liaa.jpg" alt="LIAA Export Award"
+                   onerror="this.style.display:'none'" style="object-fit:contain;padding:8px;">
+              <div class="img-icon" style="font-size:26px;">✦</div>
+              <div class="img-label" style="font-size:11px;">images/cert-liaa.jpg</div>
+            </div>
+            <div style="padding:14px 14px 16px;">
+              <span class="cert-name">LIAA</span>
+              <span class="cert-title">Export Award</span>
+              <span class="cert-desc">Recognised for excellence in export by Latvia Investment Agency</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ====================================================
+         SLIDE 13: COMPANY STRENGTH
+         ==================================================== -->
+    <!-- SLIDE 13: COMPANY STRENGTH — WHY PARTNER WITH WWL HOMES -->
+    <section class="slide" id="slide-13" data-chapter="Trust">
+      <!-- Left: strength columns -->
+      <div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding-right:40px;">
+        <span class="eyebrow">Why Partner With WWL Homes?</span>
+        <h2 class="section-title">Company Strength</h2>
+        <div class="h-line"></div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;flex:1;align-content:start;margin-top:4px;">
+          <div style="background:var(--bg-2);border:1px solid var(--border);padding:20px 18px;">
+            <p style="font-size:14px;letter-spacing:0.16em;text-transform:uppercase;color:var(--gold);margin-bottom:16px;">Factory Excellence</p>
+            <ul class="check-list">
+              <li>CNC precision to 0.5 mm</li>
+              <li>12,000 m² in Kalnciems</li>
+              <li>Traditions dating to 1890</li>
+              <li>In-house: panels, modules, windows</li>
+            </ul>
+          </div>
+          <div style="background:var(--bg-2);border:1px solid var(--border);padding:20px 18px;">
+            <p style="font-size:14px;letter-spacing:0.16em;text-transform:uppercase;color:var(--gold);margin-bottom:16px;">Quality &amp; Certification</p>
+            <ul class="check-list">
+              <li>ISO 9001, CE, Bureau Veritas, TÜV</li>
+              <li>Fire rating E160/EW60</li>
+              <li>FSC certified timber</li>
+              <li>Energy performance certificates</li>
+            </ul>
+          </div>
+          <div style="background:var(--bg-2);border:1px solid var(--border);padding:20px 18px;grid-column:span 2;">
+            <p style="font-size:14px;letter-spacing:0.16em;text-transform:uppercase;color:var(--gold);margin-bottom:16px;">End-to-End Service</p>
+            <ul class="check-list" style="display:grid;grid-template-columns:1fr 1fr;gap:4px 24px;">
+              <li>Design sketch to final handover</li>
+              <li>BIM 3D/4D/5D modelling</li>
+              <li>Cloud project management</li>
+              <li>Warranty bond 2–10 years</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: key numbers -->
+      <div style="width:240px;display:flex;flex-direction:column;gap:8px;justify-content:center;">
+        <div style="background:var(--bg-2);border:1px solid var(--border);padding:20px 18px;text-align:center;">
+          <span class="stat-num large">700<span class="gold">+</span></span>
+          <span class="stat-label" style="display:block;margin-top:6px;">Homes Built</span>
+        </div>
+        <div style="background:var(--bg-2);border:1px solid var(--border);padding:20px 18px;text-align:center;">
+          <span class="stat-num large">37</span>
+          <span class="stat-label" style="display:block;margin-top:6px;">Multi-Story Buildings</span>
+        </div>
+        <div style="background:var(--bg-2);border:1px solid var(--border);padding:20px 18px;text-align:center;">
+          <span class="stat-num large">27</span>
+          <span class="stat-label" style="display:block;margin-top:6px;">Years Experience</span>
+        </div>
+        <div style="background:var(--bg-2);border:1px solid var(--border);padding:20px 18px;text-align:center;">
+          <span class="stat-num large">10<span class="gold">+</span></span>
+          <span class="stat-label" style="display:block;margin-top:6px;">Countries</span>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ====================================================
+         SLIDE 14: SELECTED PROJECTS — GALLERY GRID
+         (Slide A: 4-image gallery)
+         ==================================================== -->
+    <!-- SLIDE 14: SELECTED PROJECTS — GALLERY (SLIDE A) -->
+    <section class="slide" id="slide-14" data-chapter="Projects">
+      <div style="display:flex;flex-direction:column;gap:18px;width:100%;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-end;">
+          <div>
+            <span class="eyebrow">Portfolio</span>
+            <h2 class="section-title">Selected Projects</h2>
+          </div>
+          <span style="font-size:14px;letter-spacing:0.16em;text-transform:uppercase;color:var(--text-dim);">700+ Built · 10+ Countries</span>
+        </div>
+
+        <!-- 4-image project gallery grid -->
+        <div class="proj-gallery-grid">
+          <!-- IMAGE PLACEHOLDER: project 01 — replace with images/project-01.jpg -->
+          <div class="proj-item img-placeholder">
+            <img src="images/project-01.jpg" alt="Project 01" onerror="this.style.display='none'">
+            <div class="img-icon" style="font-size:32px;">◫</div>
+            <div class="img-path">images/project-01.jpg</div>
+            <div class="img-label">Project 01 — Single Family · Norway</div>
+          </div>
+
+          <!-- IMAGE PLACEHOLDER: project 02 — replace with images/project-02.jpg -->
+          <div class="proj-item img-placeholder">
+            <img src="images/project-02.jpg" alt="Project 02" onerror="this.style.display='none'">
+            <div class="img-icon" style="font-size:32px;">◫</div>
+            <div class="img-path">images/project-02.jpg</div>
+            <div class="img-label">Project 02 — Modular Hotel · Latvia</div>
+          </div>
+
+          <!-- IMAGE PLACEHOLDER: project 03 — replace with images/project-03.jpg -->
+          <div class="proj-item img-placeholder">
+            <img src="images/project-03.jpg" alt="Project 03" onerror="this.style.display='none'">
+            <div class="img-icon" style="font-size:32px;">◫</div>
+            <div class="img-path">images/project-03.jpg</div>
+            <div class="img-label">Project 03 — Multi-Story · Sweden</div>
+          </div>
+
+          <!-- IMAGE PLACEHOLDER: project 04 — replace with images/project-04.jpg -->
+          <div class="proj-item img-placeholder">
+            <img src="images/project-04.jpg" alt="Project 04" onerror="this.style.display='none'">
+            <div class="img-icon" style="font-size:32px;">◫</div>
+            <div class="img-path">images/project-04.jpg</div>
+            <div class="img-label">Project 04 — Residential · UK</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ====================================================
+         SLIDE 15: PROJECT DETAILS — TWO LARGE IMAGES
+         (Slide B: side-by-side detail view)
+         ==================================================== -->
+    <!-- SLIDE 15: PROJECT DETAILS — DETAIL VIEW (SLIDE B) -->
+    <section class="slide" id="slide-15" data-chapter="Projects">
+      <div style="display:flex;flex-direction:column;gap:18px;width:100%;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-end;">
+          <div>
+            <span class="eyebrow">Project Details</span>
+            <h2 class="section-title">Closer Look</h2>
+          </div>
+          <span style="font-size:14px;letter-spacing:0.16em;text-transform:uppercase;color:var(--text-dim);">Timber Frame · Modular · VST</span>
+        </div>
+
+        <!-- Two large side-by-side image placeholders -->
+        <div class="proj-detail-grid">
+          <!-- IMAGE PLACEHOLDER: project detail 01 — replace with images/project-detail-01.jpg -->
+          <div class="img-placeholder" style="min-height:340px;">
+            <img src="images/project-detail-01.jpg" alt="Project Detail 01" onerror="this.style.display='none'">
+            <div class="img-icon" style="font-size:38px;">◫</div>
+            <div class="img-path">images/project-detail-01.jpg</div>
+            <div class="img-label">Project Detail 01 — Exterior View</div>
+          </div>
+
+          <!-- IMAGE PLACEHOLDER: project detail 02 — replace with images/project-detail-02.jpg -->
+          <div class="img-placeholder" style="min-height:340px;">
+            <img src="images/project-detail-02.jpg" alt="Project Detail 02" onerror="this.style.display='none'">
+            <div class="img-icon" style="font-size:38px;">◫</div>
+            <div class="img-path">images/project-detail-02.jpg</div>
+            <div class="img-label">Project Detail 02 — Interior / Construction</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ====================================================
+         SLIDE 16: CASE STUDY — PLUS ENERGY HOUSE
+         ==================================================== -->
+    <!-- SLIDE 16: CASE STUDY — PLUS ENERGY HOUSE, MĀRUPE -->
+    <section class="slide" id="slide-16" data-chapter="Projects">
+      <!-- Left: text -->
+      <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:18px;padding-right:44px;">
+        <div>
+          <span class="eyebrow">Case Study · Plus Energy House</span>
+          <h2 class="section-title">Mežvēji Village,<br>Mārupe</h2>
+          <div class="h-line"></div>
+        </div>
+
+        <p class="body-text dim" style="max-width:420px;">
+          Eco-luxury home that generates more energy than it consumes — combining Scandinavian craft with Baltic timber science.
+        </p>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div style="background:var(--bg-2);border:1px solid var(--border);padding:16px 14px;display:flex;flex-direction:column;gap:4px;">
+            <span class="stat-num" style="font-size:46px;">11 <span style="font-size:22px;color:var(--text-dim);">MW</span></span>
+            <span class="stat-label">Annual Generation</span>
+          </div>
+          <div style="background:var(--bg-2);border:1px solid var(--border);padding:16px 14px;display:flex;flex-direction:column;gap:4px;">
+            <span class="stat-num" style="font-size:46px;">A<span class="gold">+</span></span>
+            <span class="stat-label">Energy Class</span>
+          </div>
+          <div style="background:var(--bg-2);border:1px solid var(--border);padding:16px 14px;display:flex;flex-direction:column;gap:4px;">
+            <span class="stat-num" style="font-size:46px;">0.16</span>
+            <span class="stat-label">Wall U-value</span>
+          </div>
+          <div style="background:var(--bg-2);border:1px solid var(--border);padding:16px 14px;display:flex;flex-direction:column;gap:4px;">
+            <span class="stat-num" style="font-size:46px;">6</span>
+            <span class="stat-label">Smart Systems</span>
+          </div>
+        </div>
+
+        <div style="padding:14px 18px;background:var(--bg-2);border:1px solid var(--border);border-left:3px solid var(--gold);">
+          <p style="font-size:16px;color:var(--text);line-height:1.65;">
+            Heat pump · Heat recuperator · Integrated solar · Smart home · Warm floors &amp; walls · Auto systems
+          </p>
+        </div>
+      </div>
+
+      <!-- Right: image placeholders -->
+      <div style="flex:1;display:flex;flex-direction:column;gap:10px;">
+        <!-- IMAGE PLACEHOLDER: plus energy house exterior -->
+        <div class="img-placeholder" style="flex:1.4;">
+          <img src="images/plus-energy-house.jpg" alt="" onerror="this.style.display='none'">
+          <div class="img-icon" style="font-size:32px;">◫</div>
+          <div class="img-path">images/plus-energy-house.jpg</div>
+          <div class="img-label">Plus Energy House · Exterior</div>
+        </div>
+        <!-- IMAGE PLACEHOLDER: plus energy house interior -->
+        <div class="img-placeholder" style="flex:1;">
+          <img src="images/plus-energy-interior.jpg" alt="" onerror="this.style.display='none'">
+          <div class="img-icon" style="font-size:28px;">◫</div>
+          <div class="img-path">images/plus-energy-interior.jpg</div>
+          <div class="img-label">Plus Energy House · Interior</div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ====================================================
+         SLIDE 17: FACTORY (formerly part of case study)
+         ==================================================== -->
+    <!-- SLIDE 17: FACTORY — KALNCIEMS PRODUCTION FACILITY -->
+    <section class="slide" id="slide-17" data-chapter="Projects">
+      <div style="display:flex;flex-direction:column;gap:18px;width:100%;">
+        <div>
+          <span class="eyebrow">Production Facility</span>
+          <h2 class="section-title">Kalnciems Factory</h2>
+          <div class="h-line"></div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:2fr 1fr;gap:10px;flex:1;">
+          <!-- IMAGE PLACEHOLDER: factory main floor production -->
+          <div class="img-placeholder">
+            <img src="images/factory.jpg" alt="" onerror="this.style.display='none'">
+            <div class="img-icon" style="font-size:36px;">◫</div>
+            <div class="img-path">images/factory.jpg</div>
+            <div class="img-label">Factory Floor · Kalnciems, Latvia</div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div style="background:var(--bg-2);border:1px solid var(--border);padding:20px 18px;flex:1;display:flex;flex-direction:column;justify-content:center;gap:8px;">
+              <span class="stat-num" style="font-size:56px;">12,000</span>
+              <span class="stat-label">m² Factory Floor</span>
+            </div>
+            <div style="background:var(--bg-2);border:1px solid var(--border);padding:20px 18px;flex:1;display:flex;flex-direction:column;justify-content:center;gap:8px;">
+              <span class="stat-num" style="font-size:56px;">1890</span>
+              <span class="stat-label">Factory Roots</span>
+            </div>
+            <!-- IMAGE PLACEHOLDER: factory detail / CNC machinery -->
+            <div class="img-placeholder" style="flex:1.2;">
+              <img src="images/factory-cnc.jpg" alt="" onerror="this.style.display='none'">
+              <div class="img-icon" style="font-size:24px;">◻</div>
+              <div class="img-path">images/factory-cnc.jpg</div>
+              <div class="img-label">CNC Precision ±0.5mm</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ====================================================
+         SLIDE 18: CONTACT
+         ==================================================== -->
+    <!-- SLIDE 18: CONTACT — READY TO BUILD YOUR FUTURE -->
+    <!-- EDIT CONTACT DETAILS HERE -->
+    <section class="slide" id="slide-18" data-chapter="Contact">
+      <div style="display:flex;flex-direction:column;justify-content:center;align-items:center;gap:34px;width:100%;text-align:center;background:radial-gradient(ellipse at 50% 40%,rgba(86,149,120,0.07) 0%,transparent 65%);">
+        <div>
+          <span class="eyebrow">Let's Build Together</span>
+          <h2 class="hero-title" style="font-size:96px;text-align:center;max-width:900px;">Ready to build<br>your future?</h2>
+        </div>
+
+        <div class="contact-grid" style="width:100%;max-width:660px;">
+          <div class="contact-cell">
+            <span class="contact-label">Website</span>
+            <span class="contact-value">wwlhomes.com</span>
+          </div>
+          <div class="contact-cell">
+            <span class="contact-label">Email</span>
+            <span class="contact-value">ovannes@wwlhomes.lu</span>
+          </div>
+          <div class="contact-cell">
+            <span class="contact-label">Phone</span>
+            <span class="contact-value">+371 20 456 265</span>
+          </div>
+          <div class="contact-cell">
+            <span class="contact-label">Factory</span>
+            <span class="contact-value" style="font-size:20px;">Jelgavas iela 27, Kalnciems, Latvia</span>
+          </div>
+        </div>
+
+        <div class="pillars-row" style="width:100%;max-width:660px;">
+          <div class="pillar"><span class="pillar-name">Factory Precision</span></div>
+          <div class="pillar"><span class="pillar-name">Energy Positive</span></div>
+          <div class="pillar"><span class="pillar-name">Built to Last</span></div>
+          <div class="pillar"><span class="pillar-name">Certified Quality</span></div>
+        </div>
+
+        <p style="font-size:14px;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-dim);">
+          27 Years of Excellence · by Baltic Wood Factory · Est. 1890
+        </p>
+      </div>
+    </section>
+
+    </div><!-- /slide-stage -->
+  </div><!-- /viewport -->
+
+</div><!-- /app -->
+
+<script>
+/* ============================================================
+   1. FIXED 16:9 CANVAS SCALING
+   ============================================================ */
+const CANVAS_W = 1920;
+const CANVAS_H = 1080;
+const stage    = document.getElementById('slide-stage');
+const viewport = document.getElementById('viewport');
+
+function scaleStage() {
+  // Available area = full window minus sidebar width
+  const sidebarW = document.getElementById('sidebar').offsetWidth;
+  const availW   = window.innerWidth  - sidebarW;
+  const availH   = window.innerHeight;
+
+  const scale = Math.min(availW / CANVAS_W, availH / CANVAS_H);
+
+  stage.style.transform = `scale(${scale})`;
+  // Center within the viewport div
+  stage.style.left = Math.round((availW  - CANVAS_W) / 2) + 'px';
+  stage.style.top  = Math.round((availH  - CANVAS_H) / 2) + 'px';
+}
+
+scaleStage();
+window.addEventListener('resize', scaleStage);
+
+
+/* ============================================================
+   2. SLIDE DATA & CHAPTER NAVIGATION
+   ============================================================ */
+const chapters = [
+  { name: 'Overview',       slides: [1] },
+  { name: 'Company',        slides: [2] },
+  { name: 'Global Reach',   slides: [3] },
+  { name: 'Technologies',   slides: [4, 5, 6, 7] },
+  { name: 'Energy',         slides: [8] },
+  { name: 'Products',       slides: [9] },
+  { name: 'Sustainability', slides: [10] },
+  { name: 'Process',        slides: [11] },
+  { name: 'Trust',          slides: [12, 13] },
+  { name: 'Projects',       slides: [14, 15, 16, 17] },
+  { name: 'Contact',        slides: [18] },
+];
+
+const TOTAL = 18;
+let current = 1;
+
+function buildNav() {
+  const nav = document.getElementById('chapter-nav');
+  nav.innerHTML = '';
+  chapters.forEach((ch, i) => {
+    const el = document.createElement('div');
+    el.className = 'nav-item';
+    el.dataset.chapter = i;
+    el.innerHTML = `<span class="nav-num">${String(i + 1).padStart(2, '0')}</span>${ch.name}`;
+    el.addEventListener('click', () => goTo(ch.slides[0]));
+    nav.appendChild(el);
+  });
+}
+
+function updateNav() {
+  document.querySelectorAll('.nav-item').forEach((el, i) => {
+    const active = chapters[i].slides.some(s => s === current);
+    el.classList.toggle('active', active);
+    if (active) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  });
+}
+
+function updateCounter() {
+  document.getElementById('cur').textContent = current;
+  document.getElementById('progress-fill').style.width =
+    ((current - 1) / (TOTAL - 1) * 100) + '%';
+}
+
+function goTo(n) {
+  if (n < 1 || n > TOTAL) return;
+  const prev = document.getElementById(`slide-${String(current).padStart(2,'0')}`);
+  const next = document.getElementById(`slide-${String(n).padStart(2,'0')}`);
+  if (!prev || !next) return;
+  prev.classList.remove('active');
+  prev.classList.add('exit');
+  setTimeout(() => prev.classList.remove('exit'), 700);
+  next.classList.add('active');
+  current = n;
+  updateNav();
+  updateCounter();
+}
+
+function nextSlide() { goTo(current + 1); }
+function prevSlide() { goTo(current - 1); }
+
+
+/* ============================================================
+   3. KEYBOARD NAVIGATION — works globally, prevents scroll
+   ============================================================ */
+document.addEventListener('keydown', e => {
+  switch (e.key) {
+    case 'ArrowRight':
+    case 'ArrowDown':
+    case ' ':
+      e.preventDefault();
+      nextSlide();
+      break;
+    case 'ArrowLeft':
+    case 'ArrowUp':
+    case 'Backspace':
+      e.preventDefault();
+      prevSlide();
+      break;
+    case 'f':
+    case 'F':
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(()=>{});
+      else document.exitFullscreen();
+      break;
+  }
+}, { capture: true });
+
+
+/* ============================================================
+   4. ON-SCREEN BUTTON NAVIGATION
+   ============================================================ */
+document.getElementById('prev-btn').addEventListener('click', prevSlide);
+document.getElementById('next-btn').addEventListener('click', nextSlide);
+document.getElementById('side-prev').addEventListener('click', prevSlide);
+document.getElementById('side-next').addEventListener('click', nextSlide);
+
+
+/* ============================================================
+   5. MOUSE WHEEL NAVIGATION — debounced, threshold-gated
+   ============================================================ */
+let wheelLocked = false;
+
+document.addEventListener('wheel', e => {
+  e.preventDefault();
+
+  if (wheelLocked) return;
+  if (Math.abs(e.deltaY) < 40) return;  // ignore tiny trackpad jitter
+
+  wheelLocked = true;
+  if (e.deltaY > 0) nextSlide();
+  else              prevSlide();
+
+  setTimeout(() => { wheelLocked = false; }, 700);
+}, { passive: false, capture: true });
+
+
+/* ============================================================
+   6. TOUCH SWIPE NAVIGATION
+   ============================================================ */
+let touchStartX = 0;
+let touchStartY = 0;
+
+document.addEventListener('touchstart', e => {
+  touchStartX = e.touches[0].clientX;
+  touchStartY = e.touches[0].clientY;
+}, { passive: true });
+
+document.addEventListener('touchend', e => {
+  const dx = touchStartX - e.changedTouches[0].clientX;
+  const dy = touchStartY - e.changedTouches[0].clientY;
+  // Only trigger if horizontal swipe dominates
+  if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
+    dx > 0 ? nextSlide() : prevSlide();
+  }
+}, { passive: true });
+
+
+/* ============================================================
+   INIT
+   ============================================================ */
+buildNav();
+updateCounter();
+document.getElementById('slide-01').classList.add('active');
+</script>
+</body>
+</html>
