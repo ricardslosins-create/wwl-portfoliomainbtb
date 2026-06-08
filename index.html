@@ -954,11 +954,10 @@ nav::-webkit-scrollbar { display: none; }
           <!-- Replace images/wwl-logo.png with your actual logo file -->
           <div style="height:72px;width:280px;position:relative;display:flex;align-items:center;justify-content:center;">
             <img src="images/wwl-logo.png" alt="WWL Homes Logo"
-                 onload="this.nextElementSibling.style.display='none'"
-                 onerror="this.style.display='none'"
+                 onerror="this.style.display='none';document.getElementById('logo-fallback').style.display='block'"
                  style="max-height:72px;max-width:280px;width:auto;height:auto;object-fit:contain;position:relative;z-index:1;">
-            <!-- Fallback text — hidden automatically when logo loads -->
-            <span id="logo-fallback" style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:600;letter-spacing:0.14em;color:var(--gold);text-transform:uppercase;position:absolute;">WWL HOMES</span>
+            <!-- Fallback text — hidden by default, only appears if logo fails to load -->
+            <span id="logo-fallback" style="display:none;font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:600;letter-spacing:0.14em;color:var(--gold);text-transform:uppercase;position:absolute;">WWL HOMES</span>
           </div>
         </div>
 
