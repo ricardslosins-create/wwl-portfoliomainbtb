@@ -365,6 +365,7 @@ nav::-webkit-scrollbar { display: none; }
     linear-gradient(90deg, rgba(86,149,120,0.06) 1px, transparent 1px);
   background-size: 32px 32px;
   pointer-events: none;
+  z-index: 0;
 }
 
 .img-placeholder img {
@@ -373,6 +374,7 @@ nav::-webkit-scrollbar { display: none; }
   width: 100%; height: 100%;
   object-fit: cover;
   z-index: 1;
+  pointer-events: none;
 }
 
 /* minimal label bar at bottom */
@@ -388,12 +390,14 @@ nav::-webkit-scrollbar { display: none; }
   color: var(--gold);
   z-index: 2;
   text-align: center;
+  pointer-events: none;
 }
 
 .img-placeholder .img-icon {
   font-size: 40px;
   color: rgba(86,149,120,0.25);
   z-index: 2;
+  pointer-events: none;
 }
 
 .img-placeholder .img-path {
@@ -402,6 +406,7 @@ nav::-webkit-scrollbar { display: none; }
   color: rgba(86,149,120,0.35);
   z-index: 2;
   font-family: monospace;
+  pointer-events: none;
 }
 
 /* ============================================================
@@ -990,15 +995,15 @@ nav::-webkit-scrollbar { display: none; }
    ============================================================ */
 .img-placeholder.lb-ready {
   cursor: zoom-in;
-  transition: transform 0.30s cubic-bezier(0.25,0.46,0.45,0.94),
-              border-color 0.25s ease,
-              box-shadow 0.30s ease;
+  transition: border-color 0.25s ease,
+              box-shadow 0.30s ease,
+              filter 0.25s ease;
 }
 
 .img-placeholder.lb-ready:hover {
-  transform: scale(1.025) translateY(-3px);
   border-color: var(--gold);
-  box-shadow: 0 12px 40px rgba(86,149,120,0.18);
+  box-shadow: 0 0 0 2px rgba(86,149,120,0.45), 0 8px 32px rgba(86,149,120,0.20);
+  filter: brightness(1.08);
   z-index: 10;
 }
 </style>
@@ -1161,10 +1166,10 @@ nav::-webkit-scrollbar { display: none; }
       <!-- IMAGE PLACEHOLDER: Factory Production Facility -->
       <!-- Replace with images/factory.jpg -->
       <div style="width:42%;display:flex;flex-direction:column;gap:0;">
-        <div class="img-placeholder" style="flex:1;">
+        <div class="img-placeholder" style="aspect-ratio:550/295;width:100%;">
           <img src="images/factory.jpg" alt="Factory Production Facility"
                onerror="this.style.display='none'"
-               style="object-fit:cover;object-position:center center;">
+               style="object-fit:contain;object-position:center center;background:var(--bg-2);">
           <div class="img-icon" style="font-size:36px;">◫</div>
           <div class="img-path">images/factory.jpg</div>
           <div class="img-label">Factory Production Facility · Kalnciems</div>
@@ -2231,8 +2236,9 @@ nav::-webkit-scrollbar { display: none; }
 
         <div style="display:grid;grid-template-columns:2fr 1fr;gap:10px;flex:1;">
           <!-- IMAGE PLACEHOLDER: factory main floor production -->
-          <div class="img-placeholder">
-            <img src="images/factory.jpg" alt="" onerror="this.style.display='none'">
+          <div class="img-placeholder" style="aspect-ratio:550/295;">
+            <img src="images/factory.jpg" alt="" onerror="this.style.display='none'"
+                 style="object-fit:contain;object-position:center center;background:var(--bg-2);">
             <div class="img-icon" style="font-size:36px;">◫</div>
             <div class="img-path">images/factory.jpg</div>
             <div class="img-label">Factory Floor · Kalnciems, Latvia</div>
@@ -2247,13 +2253,7 @@ nav::-webkit-scrollbar { display: none; }
               <span class="stat-num" style="font-size:56px;">1890</span>
               <span class="stat-label">Factory Roots</span>
             </div>
-            <!-- IMAGE PLACEHOLDER: factory detail / CNC machinery -->
-            <div class="img-placeholder" style="flex:1.2;">
-              <img src="images/factory-cnc.jpg" alt="" onerror="this.style.display='none'">
-              <div class="img-icon" style="font-size:24px;">◻</div>
-              <div class="img-path">images/factory-cnc.jpg</div>
-              <div class="img-label">CNC Precision ±0.5mm</div>
-            </div>
+
           </div>
         </div>
       </div>
@@ -2528,30 +2528,23 @@ document.addEventListener('keydown', e => {
   }
 }, { capture: true });
 
-/* Scan all img-placeholder elements that contain a real loaded <img> */
+/* Lightbox — attach to all image placeholders */
 function initLightbox() {
-  document.querySelectorAll('.img-placeholder').forEach(placeholder => {
-    const img = placeholder.querySelector('img');
+  document.querySelectorAll('.img-placeholder').forEach(function(box) {
+    var img = box.querySelector('img');
     if (!img) return;
-
-    /* Mark as lightbox-ready for hover CSS */
-    placeholder.classList.add('lb-ready');
-
-    placeholder.addEventListener('click', () => {
-      /* Use the img src — only open if image actually loaded */
-      if (!img.src || img.style.display === 'none' || img.naturalWidth === 0) return;
-
-      /* Caption from img-label if present */
-      const labelEl = placeholder.querySelector('.img-label');
-      const caption = labelEl ? labelEl.textContent.trim() : '';
-
-      openLightbox(img.src, caption);
-    });
+    box.classList.add('lb-ready');
+    box.onclick = function() {
+      var src = img.src;
+      if (!src || src.indexOf('data:') === 0) return;
+      if (img.style.display === 'none') return;
+      var label = box.querySelector('.img-label');
+      openLightbox(src, label ? label.textContent.trim() : '');
+    };
   });
 }
-
-/* Run after DOM is ready — small delay ensures images have had time to register */
-setTimeout(initLightbox, 300);
+window.addEventListener('load', initLightbox);
+setTimeout(initLightbox, 600);
 </script>
 <!-- ========================================================
      LIGHTBOX OVERLAY
