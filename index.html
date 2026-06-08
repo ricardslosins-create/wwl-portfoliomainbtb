@@ -1166,10 +1166,9 @@ nav::-webkit-scrollbar { display: none; }
       <!-- IMAGE PLACEHOLDER: Factory Production Facility -->
       <!-- Replace with images/factory.jpg -->
       <div style="width:42%;display:flex;flex-direction:column;gap:0;">
-        <div class="img-placeholder" style="flex:1;">
+        <div class="img-placeholder" style="aspect-ratio:550/295;width:100%;">
           <img src="images/factory.jpg" alt="Factory Production Facility"
-               onerror="this.style.display='none'"
-               style="object-fit:cover;object-position:center center;">
+               onerror="this.style.display='none'">
           <div class="img-icon" style="font-size:36px;">◫</div>
           <div class="img-path">images/factory.jpg</div>
           <div class="img-label">Factory Production Facility · Kalnciems</div>
@@ -2236,7 +2235,7 @@ nav::-webkit-scrollbar { display: none; }
 
         <div style="display:grid;grid-template-columns:2fr 1fr;gap:10px;flex:1;">
           <!-- IMAGE PLACEHOLDER: factory main floor production -->
-          <div class="img-placeholder">
+          <div class="img-placeholder" style="aspect-ratio:550/295;">
             <img src="images/factory.jpg" alt="" onerror="this.style.display='none'">
             <div class="img-icon" style="font-size:36px;">◫</div>
             <div class="img-path">images/factory.jpg</div>
@@ -2527,27 +2526,23 @@ document.addEventListener('keydown', e => {
   }
 }, { capture: true });
 
-/* Scan all img-placeholder elements that contain a real loaded <img> */
+/* Lightbox — attach to all image placeholders */
 function initLightbox() {
-  document.querySelectorAll('.img-placeholder').forEach(placeholder => {
-    const img = placeholder.querySelector('img');
+  document.querySelectorAll('.img-placeholder').forEach(function(box) {
+    var img = box.querySelector('img');
     if (!img) return;
-
-    placeholder.classList.add('lb-ready');
-
-    placeholder.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const src = img.getAttribute('src');
-      if (!src || src === '' || img.style.display === 'none') return;
-      const labelEl = placeholder.querySelector('.img-label');
-      const caption = labelEl ? labelEl.textContent.trim() : '';
-      openLightbox(src, caption);
-    });
+    box.classList.add('lb-ready');
+    box.onclick = function() {
+      var src = img.src;
+      if (!src || src.indexOf('data:') === 0) return;
+      if (img.style.display === 'none') return;
+      var label = box.querySelector('.img-label');
+      openLightbox(src, label ? label.textContent.trim() : '');
+    };
   });
 }
-
 window.addEventListener('load', initLightbox);
-setTimeout(initLightbox, 500);
+setTimeout(initLightbox, 600);
 </script>
 <!-- ========================================================
      LIGHTBOX OVERLAY
