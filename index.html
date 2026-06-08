@@ -374,6 +374,7 @@ nav::-webkit-scrollbar { display: none; }
   width: 100%; height: 100%;
   object-fit: cover;
   z-index: 1;
+  pointer-events: none;
 }
 
 /* minimal label bar at bottom */
@@ -994,15 +995,15 @@ nav::-webkit-scrollbar { display: none; }
    ============================================================ */
 .img-placeholder.lb-ready {
   cursor: zoom-in;
-  transition: transform 0.30s cubic-bezier(0.25,0.46,0.45,0.94),
-              border-color 0.25s ease,
-              box-shadow 0.30s ease;
+  transition: border-color 0.25s ease,
+              box-shadow 0.30s ease,
+              filter 0.25s ease;
 }
 
 .img-placeholder.lb-ready:hover {
-  transform: scale(1.025) translateY(-3px);
   border-color: var(--gold);
-  box-shadow: 0 12px 40px rgba(86,149,120,0.18);
+  box-shadow: 0 0 0 2px rgba(86,149,120,0.45), 0 8px 32px rgba(86,149,120,0.20);
+  filter: brightness(1.08);
   z-index: 10;
 }
 </style>
@@ -2251,13 +2252,7 @@ nav::-webkit-scrollbar { display: none; }
               <span class="stat-num" style="font-size:56px;">1890</span>
               <span class="stat-label">Factory Roots</span>
             </div>
-            <!-- IMAGE PLACEHOLDER: factory detail / CNC machinery -->
-            <div class="img-placeholder" style="flex:1.2;">
-              <img src="images/factory-cnc.jpg" alt="" onerror="this.style.display='none'">
-              <div class="img-icon" style="font-size:24px;">◻</div>
-              <div class="img-path">images/factory-cnc.jpg</div>
-              <div class="img-label">CNC Precision ±0.5mm</div>
-            </div>
+
           </div>
         </div>
       </div>
@@ -2538,28 +2533,21 @@ function initLightbox() {
     const img = placeholder.querySelector('img');
     if (!img) return;
 
-    /* Mark as lightbox-ready for hover CSS */
     placeholder.classList.add('lb-ready');
 
     placeholder.addEventListener('click', (e) => {
       e.stopPropagation();
-
-      /* Get the image src — fallback to data-src if needed */
-      const src = img.getAttribute('src') || img.getAttribute('data-src');
+      const src = img.getAttribute('src');
       if (!src || src === '' || img.style.display === 'none') return;
-
-      /* Caption from img-label if present */
       const labelEl = placeholder.querySelector('.img-label');
       const caption = labelEl ? labelEl.textContent.trim() : '';
-
       openLightbox(src, caption);
     });
   });
 }
 
-/* Run on load and after a delay to catch dynamically shown slides */
-window.addEventListener('load', () => setTimeout(initLightbox, 100));
-setTimeout(initLightbox, 800);
+window.addEventListener('load', initLightbox);
+setTimeout(initLightbox, 500);
 </script>
 <!-- ========================================================
      LIGHTBOX OVERLAY
