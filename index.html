@@ -365,6 +365,7 @@ nav::-webkit-scrollbar { display: none; }
     linear-gradient(90deg, rgba(86,149,120,0.06) 1px, transparent 1px);
   background-size: 32px 32px;
   pointer-events: none;
+  z-index: 0;
 }
 
 .img-placeholder img {
@@ -388,12 +389,14 @@ nav::-webkit-scrollbar { display: none; }
   color: var(--gold);
   z-index: 2;
   text-align: center;
+  pointer-events: none;
 }
 
 .img-placeholder .img-icon {
   font-size: 40px;
   color: rgba(86,149,120,0.25);
   z-index: 2;
+  pointer-events: none;
 }
 
 .img-placeholder .img-path {
@@ -402,6 +405,7 @@ nav::-webkit-scrollbar { display: none; }
   color: rgba(86,149,120,0.35);
   z-index: 2;
   font-family: monospace;
+  pointer-events: none;
 }
 
 /* ============================================================
@@ -2537,21 +2541,25 @@ function initLightbox() {
     /* Mark as lightbox-ready for hover CSS */
     placeholder.classList.add('lb-ready');
 
-    placeholder.addEventListener('click', () => {
-      /* Use the img src — only open if image actually loaded */
-      if (!img.src || img.style.display === 'none' || img.naturalWidth === 0) return;
+    placeholder.addEventListener('click', (e) => {
+      e.stopPropagation();
+
+      /* Get the image src — fallback to data-src if needed */
+      const src = img.getAttribute('src') || img.getAttribute('data-src');
+      if (!src || src === '' || img.style.display === 'none') return;
 
       /* Caption from img-label if present */
       const labelEl = placeholder.querySelector('.img-label');
       const caption = labelEl ? labelEl.textContent.trim() : '';
 
-      openLightbox(img.src, caption);
+      openLightbox(src, caption);
     });
   });
 }
 
-/* Run after DOM is ready — small delay ensures images have had time to register */
-setTimeout(initLightbox, 300);
+/* Run on load and after a delay to catch dynamically shown slides */
+window.addEventListener('load', () => setTimeout(initLightbox, 100));
+setTimeout(initLightbox, 800);
 </script>
 <!-- ========================================================
      LIGHTBOX OVERLAY
